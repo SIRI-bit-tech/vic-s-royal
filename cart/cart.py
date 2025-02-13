@@ -11,18 +11,30 @@ class Cart:
             cart = self.session[settings.CART_SESSION_ID] = {}
         self.cart = cart
 
-    def add(self, product, quantity=1, override_quantity=False):
+    def add(self, product, quantity=1, update_quantity=False):
         """Add a product to the cart or update its quantity."""
         product_id = str(product.id)
         if product_id not in self.cart:
-            # Use sale_price if product is on sale, otherwise use regular price
-            price = str(product.sale_price if product.on_sale and product.sale_price else product.price)
-            self.cart[product_id] = {'quantity': 0, 'price': price}
-        if override_quantity:
+            price = product.sale_price if product.on_sale and product.sale_price else product.price
+            self.cart[product_id] = {
+                'quantity': 0,
+                'price': str(price)
+            }
+        if update_quantity:
             self.cart[product_id]['quantity'] = quantity
         else:
             self.cart[product_id]['quantity'] += quantity
         self.save()
+
+    def decrease(self, product):
+        """Decrease the quantity of a product in the cart."""
+        product_id = str(product.id)
+        if product_id in self.cart:
+            if self.cart[product_id]['quantity'] > 1:
+                self.cart[product_id]['quantity'] -= 1
+            else:
+                del self.cart[product_id]
+            self.save()
 
     def save(self):
         """Mark session as modified to make sure it gets saved."""
@@ -45,8 +57,9 @@ class Cart:
             cart[str(product.id)]['product'] = product
 
         for item in cart.values():
-            item['price'] = Decimal(item['price'])
-            item['total_price'] = item['price'] * item['quantity']
+            price = Decimal(item['price'])
+            item['price'] = str(price)
+            item['total_price'] = str(price * item['quantity'])
             yield item
 
     def __len__(self):
@@ -55,7 +68,10 @@ class Cart:
 
     def get_total_price(self):
         """Calculate total price of items in cart."""
-        return sum(Decimal(item['price']) * item['quantity'] for item in self.cart.values())
+        total = Decimal('0')
+        for item_id, item in self.cart.items():
+            total += Decimal(item['price']) * item['quantity']
+        return str(total)
 
     def clear(self):
         """Remove cart from session."""
@@ -65,11 +81,25 @@ class Cart:
     def get_discount(self):
         """Calculate total discount amount."""
         total_discount = Decimal('0')
-        for item in self:
-            if item['product'].on_sale and item['product'].sale_price:
-                original_price = item['product'].price
-                sale_price = item['product'].sale_price
-                discount = (original_price - sale_price) * item['quantity']
+        for item_id, item_data in self.cart.items():
+            product = Product.objects.get(id=item_id)
+            if product.on_sale and product.sale_price:
+                discount = (product.price - product.sale_price) * item_data['quantity']
                 total_discount += discount
-        return total_discount
+        return str(total_discount)
+
+    def get_total_quantity(self):
+        """Get the total quantity of items in the cart."""
+        return sum(item['quantity'] for item in self.cart.values())
+
+    def get_item_quantity(self, product_id):
+        """Get the quantity of a specific item in the cart."""
+        return self.cart.get(str(product_id), {}).get('quantity', 0)
+
+    def get_item_total(self, product_id):
+        """Get the total price of a specific item in the cart."""
+        item = self.cart.get(str(product_id))
+        if item:
+            return str(Decimal(item['price']) * item['quantity'])
+        return '0'
 

@@ -10,35 +10,62 @@
     .mdc-card {
         border-radius: 16px;
         transition: all 0.3s ease;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
     }
-    .mdc-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    .cart-container {
+        padding: 16px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     .cart-item {
         border-bottom: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
+        padding: 16px 0;
+        width: 100%;
     }
     .cart-item:last-child {
         border-bottom: none;
     }
-    .cart-item:hover {
-        background-color: rgba(0,0,0,0.02);
+    .cart-item-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    @media (min-width: 640px) {
+        .cart-item-content {
+            flex-direction: row;
+            align-items: center;
+        }
     }
     .product-image {
-        width: 120px;
-        height: 120px;
-        border-radius: 12px;
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
         overflow: hidden;
+        flex-shrink: 0;
     }
     .product-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.3s ease;
     }
-    .product-image:hover img {
-        transform: scale(1.05);
+    .product-details {
+        flex-grow: 1;
+        min-width: 0; /* Prevents flex item from overflowing */
+    }
+    .product-title {
+        font-size: 1.125rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        word-wrap: break-word;
+    }
+    .price-quantity {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
     }
     .quantity-input {
         width: 80px;
@@ -47,116 +74,130 @@
         border-radius: 8px;
         padding: 8px;
     }
-    .remove-button {
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
+    .actions {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
+        gap: 8px;
+        flex-wrap: wrap;
     }
-    .remove-button:hover {
-        background-color: rgba(239,68,68,0.1);
+    .cart-summary {
+        padding: 16px;
+        background-color: #f9fafb;
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+    .cart-total {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+    .cart-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-between;
+    }
+    .empty-cart {
+        text-align: center;
+        padding: 32px 16px;
+    }
+    .empty-cart .material-icons {
+        font-size: 48px;
+        color: #9ca3af;
+        margin-bottom: 16px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="mdc-layout-grid">
-    <div class="mdc-layout-grid__inner">
-        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
-            <h1 class="mdc-typography--headline4 mb-6">Shopping Cart</h1>
+<div class="cart-container">
+    <h1 class="mdc-typography--headline4 mb-6">Shopping Cart</h1>
 
       {% if cart %}
-                <div class="mdc-card">
-                    <div class="p-6">
+        <div class="mdc-card">
                       {% for item in cart %}
-                            <div class="cart-item py-6">
-                                <div class="flex items-center">
-                                    <div class="product-image flex-shrink-0">
-                                        <a href="{{ item.product.get_absolute_url }}">
-                                            <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
-                                                 alt="{{ item.product.name }}">
-                                        </a>
-                                    </div>
-                                    <div class="ml-6 flex-grow">
-                                        <h2 class="mdc-typography--headline6 mb-2">
-                                            <a href="{{ item.product.get_absolute_url }}" class="hover:text-blue-600 transition-colors">
-                                                {{ item.product.name }}
-                                            </a>
-                                        </h2>
-                                        {% if item.product.on_sale and item.product.sale_price %}
-                                            <div class="flex items-center mb-2">
-                                                <span class="line-through text-gray-500 mr-2">₦{{ item.product.price }}</span>
-                                                <span class="text-red-500 font-bold">₦{{ item.price }}</span>
-                                                <span class="ml-2 text-green-600">(-{{ item.product.discount_percentage }}%)</span>
-                                            </div>
-                                        {% else %}
-                                            <p class="text-gray-800 font-bold mb-2">₦{{ item.price }}</p>
-                                        {% endif %}
-                                        <form action="{% url 'cart:cart_add' item.product.id %}" method="post" class="flex items-center">
-                                            {% csrf_token %}
-                                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
-                                                   class="quantity-input mdc-text-field__input">
-                                            <button type="submit" class="mdc-button mdc-button--raised ml-4">
-                                                <span class="mdc-button__ripple"></span>
-                                                <span class="material-icons mr-2">update</span>
-                                                <span class="mdc-button__label">Update</span>
-                                            </button>
-                                        </form>
+                <div class="cart-item" id="cart-item-{{ item.product.id }}">
+                    <div class="cart-item-content">
+                        <div class="product-image">
+                            <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                 alt="{{ item.product.name }}">
+                                          </div>
+                        <div class="product-details">
+                            <h2 class="product-title">{{ item.product.name }}</h2>
+                            <div class="price-quantity">
+                                <div class="price">
+                                    {% if item.product.on_sale and item.product.sale_price %}
+                                        <span class="line-through text-gray-500">₦{{ item.product.price }}</span>
+                                        <span class="text-red-500 font-bold">₦{{ item.price }}</span>
+                                        <span class="text-green-600 text-sm">(-{{ item.product.discount_percentage }}%)</span>
+                                    {% else %}
+                                        <span class="font-bold">₦{{ item.price }}</span>
+                                    {% endif %}
                                       </div>
-                                    <div class="ml-6 flex items-center">
-                                        <p class="text-lg font-bold mr-6">₦{{ item.total_price }}</p>
-                                        <form action="{% url 'cart:cart_remove' item.product.id %}" method="post">
+                                <div class="flex items-center gap-2">
+                                    <form action="{% url 'cart:cart_decrease' item.product.id %}" method="post" class="cart-quantity-form" data-product-id="{{ item.product.id }}">
                                           {% csrf_token %}
-                                            <button type="submit" class="remove-button text-red-500 hover:text-red-700">
-                                                <span class="material-icons">delete</span>
-                                          </button>
+                                        <button type="submit" class="mdc-icon-button material-icons text-gray-600 hover:text-red-500">
+                                            remove_circle_outline
+                                        </button>
                                       </form>
-                                    </div>
+                                    <span class="quantity-display px-4 py-2 bg-gray-100 rounded" id="quantity-{{ item.product.id }}">{{ item.quantity }}</span>
+                                    <form action="{% url 'cart:cart_increase' item.product.id %}" method="post" class="cart-quantity-form" data-product-id="{{ item.product.id }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="mdc-icon-button material-icons text-gray-600 hover:text-green-500">
+                                            add_circle_outline
+                                          </button>
+                                    </form>
+                                    <form action="{% url 'cart:cart_remove' item.product.id %}" method="post" class="cart-quantity-form" data-product-id="{{ item.product.id }}">
+                                          {% csrf_token %}
+                                        <button type="submit" class="mdc-icon-button material-icons text-red-500 hover:text-red-700">
+                                            delete
+                                        </button>
+                                      </form>
                                 </div>
-                            </div>
-                      {% endfor %}
-
-                        <div class="mt-6 flex justify-between items-center">
-                            <div>
-                                <p class="mdc-typography--headline6">Total: ₦{{ cart.get_total_price }}</p>
-                                {% if cart.get_discount %}
-                                    <p class="text-green-600">
-                                        <span class="material-icons align-middle mr-1">local_offer</span>
-                                        Discount: ₦{{ cart.get_discount }}
-                                    </p>
-                                {% endif %}
-          </div>
-                            <div class="flex space-x-4">
-                                <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--outlined">
-                                    <span class="mdc-button__ripple"></span>
-                                    <span class="material-icons mr-2">arrow_back</span>
-                                    <span class="mdc-button__label">Continue Shopping</span>
-                                </a>
-                                <a href="{% url 'orders:order_create' %}" class="mdc-button mdc-button--raised">
-                                    <span class="mdc-button__ripple"></span>
-                                    <span class="material-icons mr-2">shopping_cart_checkout</span>
-                                    <span class="mdc-button__label">Checkout</span>
-                                </a>
+                                <div class="mt-2">
+                                    <span class="font-bold" id="item-total-{{ item.product.id }}">Total: ₦{{ item.total_price }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                      {% endfor %}
+
+            <div class="cart-summary">
+                <div class="cart-total">
+                    <span id="cart-total">Total: ₦{{ cart.get_total_price }}</span>
+                    {% if cart.get_discount %}
+                        <div class="text-green-600 text-sm">
+                            <span class="material-icons align-middle">local_offer</span>
+                            <span id="cart-discount">Discount: ₦{{ cart.get_discount }}</span>
+                        </div>
+                    {% endif %}
           </div>
-      {% else %}
-                <div class="mdc-card p-8 text-center">
-                    <span class="material-icons text-gray-400 text-6xl mb-4">shopping_cart</span>
-                    <p class="mdc-typography--body1 text-gray-600 mb-6">Your cart is empty.</p>
-                    <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--raised">
+                <div class="cart-buttons">
+                    <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--outlined">
                         <span class="mdc-button__ripple"></span>
-                        <span class="material-icons mr-2">shopping_bag</span>
-                        <span class="mdc-button__label">Start Shopping</span>
+                        <span class="material-icons">arrow_back</span>
+                        <span class="mdc-button__label">Continue Shopping</span>
+                    </a>
+                    <a href="{% url 'orders:order_create' %}" class="mdc-button mdc-button--raised">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="material-icons">shopping_cart_checkout</span>
+                        <span class="mdc-button__label">Checkout</span>
                     </a>
                 </div>
-      {% endif %}
+            </div>
+          </div>
+      {% else %}
+        <div class="mdc-card empty-cart">
+            <span class="material-icons">shopping_cart</span>
+            <p class="mdc-typography--body1 text-gray-600 mb-6">Your cart is empty.</p>
+            <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--raised">
+                <span class="mdc-button__ripple"></span>
+                <span class="material-icons">shopping_bag</span>
+                <span class="mdc-button__label">Start Shopping</span>
+            </a>
         </div>
-    </div>
+      {% endif %}
   </div>
 {% endblock %}
 
@@ -164,17 +205,104 @@
 <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Material Components
         mdc.autoInit();
-
-        // Initialize all buttons
-        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+        document.querySelectorAll('.mdc-button, .mdc-icon-button').forEach(function(buttonEl) {
             new mdc.ripple.MDCRipple(buttonEl);
+            if (buttonEl.classList.contains('mdc-icon-button')) {
+                buttonEl.unbounded = true;
+            }
         });
 
-        // Initialize text fields
-        document.querySelectorAll('.mdc-text-field').forEach(function(textField) {
-            new mdc.textField.MDCTextField(textField);
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function updateCartDisplay(itemId, data) {
+            // Update quantity display
+            const quantityDisplay = document.getElementById(`quantity-${itemId}`);
+            if (quantityDisplay) {
+                quantityDisplay.textContent = data.item_quantity;
+            }
+
+            // Update item total
+            const itemTotal = document.getElementById(`item-total-${itemId}`);
+            if (itemTotal) {
+                itemTotal.textContent = `Total: ₦${data.item_total}`;
+            }
+
+            // Update cart total
+            const cartTotal = document.getElementById('cart-total');
+            if (cartTotal) {
+                cartTotal.textContent = `Total: ₦${data.cart_total_price}`;
+            }
+
+            // Update cart count badges
+            const cartCount = document.getElementById('cart-count');
+            const cartCountMobile = document.getElementById('cart-count-mobile');
+            if (cartCount) cartCount.textContent = data.cart_total;
+            if (cartCountMobile) cartCountMobile.textContent = data.cart_total;
+
+            // Update discount if present
+            const cartDiscount = document.getElementById('cart-discount');
+            if (cartDiscount && data.cart_discount !== '0') {
+                cartDiscount.textContent = `Discount: ₦${data.cart_discount}`;
+            }
+
+            // Remove item if quantity is 0
+            if (data.item_quantity === 0) {
+                const cartItem = document.getElementById(`cart-item-${itemId}`);
+                if (cartItem) {
+                    cartItem.style.opacity = '0';
+                    setTimeout(() => {
+                        cartItem.remove();
+                        // If no items left, reload to show empty cart
+                        if (data.cart_total === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                }
+            }
+        }
+
+        // Handle all cart forms (increase, decrease, remove)
+        document.querySelectorAll('.cart-quantity-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const productId = this.dataset.productId;
+                const csrftoken = getCookie('csrftoken');
+
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: new FormData(this)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateCartDisplay(productId, data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
         });
     });
 </script>

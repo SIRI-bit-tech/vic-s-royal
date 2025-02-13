@@ -99,7 +99,119 @@
             
             .mobile-menu {
                 background: white;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 280px;
+                transform: translateX(-100%);
                 transition: transform 0.3s ease-in-out;
+                z-index: 100;
+                overflow-y: auto;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .mobile-menu.active {
+                transform: translateX(0);
+            }
+            
+            .mobile-menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease-in-out;
+                z-index: 99;
+            }
+            
+            .mobile-menu-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .mobile-menu-header {
+                padding: 20px;
+                border-bottom: 1px solid #e5e7eb;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background-color: #f8f9fa;
+            }
+            
+            .mobile-menu-close {
+                padding: 8px;
+                border-radius: 50%;
+                transition: all 0.2s;
+                color: #374151;
+            }
+            
+            .mobile-menu-close:hover {
+                background-color: #e5e7eb;
+                color: var(--mdc-theme-primary);
+            }
+            
+            .mobile-menu-content {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 20px;
+            }
+            
+            .mobile-menu-section {
+                margin-bottom: 24px;
+            }
+            
+            .mobile-menu-section-title {
+                font-size: 0.875rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: #6b7280;
+                margin-bottom: 12px;
+                padding: 0 8px;
+            }
+            
+            .mobile-menu-item {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                color: #374151;
+                border-radius: 8px;
+                transition: all 0.2s;
+                margin-bottom: 4px;
+                font-weight: 500;
+            }
+            
+            .mobile-menu-item .material-icons {
+                margin-right: 12px;
+                font-size: 20px;
+            }
+            
+            .mobile-menu-item:hover {
+                background-color: #f3f4f6;
+                color: var(--mdc-theme-primary);
+            }
+            
+            .mobile-menu-item.active {
+                background-color: #e5e7eb;
+                color: var(--mdc-theme-primary);
+            }
+            
+            .mobile-submenu {
+                margin: 4px 0 8px 36px;
+                border-left: 2px solid #e5e7eb;
+                padding-left: 16px;
+            }
+            
+            .mobile-menu-footer {
+                padding: 20px;
+                border-top: 1px solid #e5e7eb;
+                background-color: #f8f9fa;
             }
             
             .badge {
@@ -226,36 +338,100 @@
             </div>
 
             <!-- Mobile Menu -->
-            <div class="hidden md:hidden mobile-menu" id="mobile-menu">
-                <nav class="py-4 space-y-2">
-                    <div>
-                        <button class="w-full flex items-center justify-between px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200" id="mobile-products-menu-button">
-                            <span>Products</span>
-                            <span class="material-icons">expand_more</span>
-                        </button>
-                        <div class="hidden pl-8 space-y-2" id="mobile-products-submenu">
-                            {% for category in categories %}
-                                {% if category.active %}
-                                    <a href="{{ category.get_absolute_url }}" class="block py-2 text-gray-600 hover:text-primary transition-colors duration-200">
-                                        {{ category.name }}
-                                    </a>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
+            <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+            <div class="mobile-menu" id="mobile-menu">
+                <div class="mobile-menu-header">
+                    <div class="flex items-center space-x-3">
+                        <img src="{% static 'img/logo.jpg' %}" alt="Vic's Royal Beauty" class="h-12 w-12 rounded-lg">
+                        <span class="text-lg font-bold text-gray-800">Vic's Royal Beauty</span>
                     </div>
-                    <a href="{% url 'about' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">About</a>
-                    <a href="{% url 'faq' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">FAQ</a>
-                    <a href="{% url 'customer_support' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Customer Support</a>
+                    <button id="mobile-menu-close" class="mobile-menu-close">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-content">
+                    <div class="mobile-menu-section">
+                        <div class="mobile-menu-section-title">Menu</div>
+                        <nav class="space-y-1">
+                            <a href="{% url 'home' %}" class="mobile-menu-item">
+                                <span class="material-icons">home</span>
+                                Home
+                            </a>
+                            <div>
+                                <button class="mobile-menu-item w-full flex items-center justify-between" id="mobile-products-menu-button">
+                                    <div class="flex items-center">
+                                        <span class="material-icons">category</span>
+                                        <span>Products</span>
+                                    </div>
+                                    <span class="material-icons">expand_more</span>
+                        </button>
+                                <div class="hidden mobile-submenu" id="mobile-products-submenu">
+                                    {% for category in categories %}
+                                        {% if category.active %}
+                                            <a href="{{ category.get_absolute_url }}" class="mobile-menu-item">
+                                                {{ category.name }}
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <a href="{% url 'about' %}" class="mobile-menu-item">
+                                <span class="material-icons">info</span>
+                                About
+                            </a>
+                            <a href="{% url 'faq' %}" class="mobile-menu-item">
+                                <span class="material-icons">help</span>
+                                FAQ
+                            </a>
+                            <a href="{% url 'customer_support' %}" class="mobile-menu-item">
+                                <span class="material-icons">support_agent</span>
+                                Customer Support
+                            </a>
+                        </nav>
+                        </div>
+
+                    <div class="mobile-menu-section">
+                        <div class="mobile-menu-section-title">Quick Access</div>
+                        <nav class="space-y-1">
+                            <a href="{% url 'cart:cart_detail' %}" class="mobile-menu-item">
+                                <span class="material-icons">shopping_cart</span>
+                                Shopping Cart
+                            </a>
+                            <a href="{% url 'products:wishlist' %}" class="mobile-menu-item">
+                                <span class="material-icons">favorite_border</span>
+                                Wishlist
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <div class="mobile-menu-footer">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Profile</a>
+                        <div class="mobile-menu-section">
+                            <div class="mobile-menu-section-title">Account</div>
+                            <nav class="space-y-1">
+                                <a href="{% url 'accounts:profile' %}" class="mobile-menu-item">
+                                    <span class="material-icons">person</span>
+                                    Profile
+                                </a>
                         <form action="{% url 'accounts:logout' %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Logout</button>
+                                    <button type="submit" class="mobile-menu-item w-full flex items-center text-left">
+                                        <span class="material-icons">logout</span>
+                                        Logout
+                                    </button>
                         </form>
+                            </nav>
+                        </div>
                     {% else %}
-                        <a href="{% url 'accounts:login' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Login</a>
+                        <a href="{% url 'accounts:login' %}" class="mdc-button mdc-button--raised w-full">
+                            <span class="mdc-button__ripple"></span>
+                            <span class="material-icons mr-2">login</span>
+                            <span class="mdc-button__label">Login</span>
+                        </a>
                     {% endif %}
-                </nav>
+                </div>
             </div>
         </div>
     </header>
@@ -354,10 +530,12 @@
                 }
             });
 
-            // Mobile menu toggle
+            // Mobile menu functionality
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
-            const mobileProductsMenuButton = document.getElementById('mobile-products-menu-button');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const mobileMenuClose = document.getElementById('mobile-menu-close');
+            const mobileProductsButton = document.getElementById('mobile-products-menu-button');
             const mobileProductsSubmenu = document.getElementById('mobile-products-submenu');
             const backToTopButton = document.getElementById('back-to-top');
             const notification = document.getElementById('notification');
@@ -367,24 +545,26 @@
             const cartCountMobile = document.getElementById('cart-count-mobile');
             const wishlistCountMobile = document.getElementById('wishlist-count-mobile');
 
-            // Mobile menu toggle
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
+            function toggleMobileMenu() {
+                mobileMenu.classList.toggle('active');
+                mobileMenuOverlay.classList.toggle('active');
+                document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+            }
 
-            // Mobile products submenu toggle
-            mobileProductsMenuButton.addEventListener('click', (e) => {
-                e.preventDefault();
+            mobileMenuButton.addEventListener('click', toggleMobileMenu);
+            mobileMenuClose.addEventListener('click', toggleMobileMenu);
+            mobileMenuOverlay.addEventListener('click', toggleMobileMenu);
+
+            mobileProductsButton.addEventListener('click', function() {
+                const icon = this.querySelector('.material-icons');
+                icon.textContent = icon.textContent === 'expand_more' ? 'expand_less' : 'expand_more';
                 mobileProductsSubmenu.classList.toggle('hidden');
             });
 
-            // Close menus when clicking outside
-            document.addEventListener('click', (event) => {
-                if (!event.target.closest('#mobile-menu') && !event.target.closest('#mobile-menu-button')) {
-                    mobileMenu.classList.add('hidden');
-                }
-                if (!event.target.closest('#mobile-products-submenu') && !event.target.closest('#mobile-products-menu-button')) {
-                    mobileProductsSubmenu.classList.add('hidden');
+            // Close mobile menu on window resize if it's open
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768 && mobileMenu.classList.contains('active')) {
+                    toggleMobileMenu();
                 }
             });
 
