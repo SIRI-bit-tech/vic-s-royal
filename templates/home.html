@@ -164,7 +164,7 @@
                 <div class="mdc-card product-card">
                     <a href="{{ product.get_absolute_url }}" class="view-details-link">
                         <div class="product-card__media">
-                            <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" 
+                        <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" 
                                  alt="{{ product.name }}">
                             <span class="sale-badge">Save {{ product.discount_percentage }}%</span>
                         </div>
@@ -196,8 +196,8 @@
                         {% endif %}
                     </div>
                 </div>
-                {% endfor %}
-            </div>
+            {% endfor %}
+        </div>
         </div>
         {% endif %}
 
