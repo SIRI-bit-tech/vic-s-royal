@@ -3,12 +3,13 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from decimal import Decimal
+from cloudinary.models import CloudinaryField
 
 class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to='categories/%Y/%m/%d', blank=True)
+    image = CloudinaryField('image', folder='categories', null=True, blank=True)
     active = models.BooleanField(default=True)
 
     class Meta:
@@ -47,7 +48,14 @@ class Product(models.Model):
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200)
-    image = models.ImageField(upload_to='products/%Y/%m/%d', blank=True)
+    image = CloudinaryField('image', folder='products', 
+                          transformation={
+                              'width': 800,
+                              'height': 600,
+                              'crop': 'fill',
+                              'quality': 'auto',
+                              'fetch_format': 'auto'
+                          })
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, help_text='Price in Naira (₦)')
     available = models.BooleanField(default=True)
@@ -130,7 +138,14 @@ class Wishlist(models.Model):
 class HeroBanner(models.Model):
     title = models.CharField(max_length=200)
     subtitle = models.CharField(max_length=200, blank=True)
-    image = models.ImageField(upload_to='banners/%Y/%m/%d')
+    image = CloudinaryField('image', folder='banners',
+                          transformation={
+                              'width': 1920,
+                              'height': 800,
+                              'crop': 'fill',
+                              'quality': 'auto',
+                              'fetch_format': 'auto'
+                          })
     button_text = models.CharField(max_length=50, default='Shop Now')
     button_link = models.CharField(max_length=200, default='/')
     active = models.BooleanField(default=True)
@@ -146,7 +161,14 @@ class HeroBanner(models.Model):
 
 class Testimonial(models.Model):
     name = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='testimonials/%Y/%m/%d', blank=True)
+    image = CloudinaryField('image', folder='testimonials', null=True, blank=True,
+                          transformation={
+                              'width': 150,
+                              'height': 150,
+                              'crop': 'fill',
+                              'quality': 'auto',
+                              'fetch_format': 'auto'
+                          })
     content = models.TextField()
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
     active = models.BooleanField(default=True)
@@ -162,7 +184,14 @@ class BlogPost(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     content = models.TextField()
-    image = models.ImageField(upload_to='blog/%Y/%m/%d')
+    image = CloudinaryField('image', folder='blog',
+                          transformation={
+                              'width': 1200,
+                              'height': 630,
+                              'crop': 'fill',
+                              'quality': 'auto',
+                              'fetch_format': 'auto'
+                          })
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=True)
@@ -182,7 +211,14 @@ class BlogPost(models.Model):
         return reverse('products:blog_detail', args=[self.slug])
 
 class InstagramFeed(models.Model):
-    image = models.ImageField(upload_to='instagram/%Y/%m/%d')
+    image = CloudinaryField('image', folder='instagram',
+                          transformation={
+                              'width': 600,
+                              'height': 600,
+                              'crop': 'fill',
+                              'quality': 'auto',
+                              'fetch_format': 'auto'
+                          })
     caption = models.CharField(max_length=200)
     link = models.URLField()
     created = models.DateTimeField(auto_now_add=True)
@@ -198,7 +234,14 @@ class Video(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     video_url = models.URLField(help_text='YouTube or Vimeo URL')
-    thumbnail = models.ImageField(upload_to='video_thumbnails/%Y/%m/%d', blank=True)
+    thumbnail = CloudinaryField('image', folder='video_thumbnails', null=True, blank=True,
+                             transformation={
+                                 'width': 1280,
+                                 'height': 720,
+                                 'crop': 'fill',
+                                 'quality': 'auto',
+                                 'fetch_format': 'auto'
+                             })
     active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
 
