@@ -1,1 +1,1 @@
- web: gunicorn hair_ecommerce.wsgi:application
+web: gunicorn hair_ecommerce.wsgi:application
