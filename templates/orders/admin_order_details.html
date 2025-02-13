@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Order Details - Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Order Details - Order #{{ order.id }}</h1>
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <h2 class="text-xl font-semibold mb-4">Customer Information</h2>
+        <p><strong>Name:</strong> {{ order.first_name }} {{ order.last_name }}</p>
+        <p><strong>Email:</strong> {{ order.email }}</p>
+        <p><strong>Address:</strong> {{ order.address }}, {{ order.postal_code }} {{ order.city }}</p>
+        
+        <h2 class="text-xl font-semibold mt-6 mb-4">Order Items</h2>
+        <table class="w-full mb-6">
+            <thead>
+                <tr>
+                    <th class="text-left py-2">Product</th>
+                    <th class="text-left py-2">Image</th>
+                    <th class="text-right py-2">Price</th>
+                    <th class="text-right py-2">Quantity</th>
+                    <th class="text-right py-2">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td class="py-2">{{ item.product.name }}</td>
+                    <td class="py-2">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-16 h-16 object-cover">
+                        {% else %}
+                            No image
+                        {% endif %}
+                    </td>
+                    <td class="text-right py-2">₦{{ item.price }}</td>
+                    <td class="text-right py-2">{{ item.quantity }}</td>
+                    <td class="text-right py-2">₦{{ item.get_cost }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="font-bold">
+                    <td colspan="4" class="text-right py-2">Total:</td>
+                    <td class="text-right py-2">₦{{ order.get_total_cost }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}About Us{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .about-header {
+        background: linear-gradient(to right, var(--mdc-theme-primary), var(--mdc-theme-secondary));
+        padding: 64px 0;
+        margin-bottom: 48px;
+        color: white;
+        text-align: center;
+    }
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        margin-bottom: 32px;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: var(--mdc-theme-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+    .team-member-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 16px;
+    }
+    .value-card {
+        text-align: center;
+        padding: 32px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-header">
+    <div class="container mx-auto px-4">
+        <h1 class="mdc-typography--headline2 mb-4">About Our Hair Store</h1>
+        <p class="mdc-typography--subtitle1 max-w-2xl mx-auto">
+            Discover the story behind our passion for quality hair products and exceptional customer service.
+        </p>
+    </div>
+</div>
+
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <!-- Our Story -->
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <div class="mdc-card p-8">
+                <h2 class="mdc-typography--headline4 text-center mb-6">Our Story</h2>
+                <div class="mdc-typography--body1 max-w-3xl mx-auto text-center leading-relaxed">
+                    <p class="mb-4">
+                        Founded in 2023, our hair store began with a simple mission: to provide high-quality hair products 
+                        that help our customers look and feel their best. We understand that great hair is more than just 
+                        appearance – it's about confidence and self-expression.
+                    </p>
+                    <p>
+                        Today, we continue to grow and evolve, always putting our customers first and staying true to our 
+                        commitment to quality, authenticity, and exceptional service.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Our Values -->
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <h2 class="mdc-typography--headline4 text-center mb-8">Our Values</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="mdc-card value-card">
+                    <div class="feature-icon">
+                        <span class="material-icons">verified</span>
+                    </div>
+                    <h3 class="mdc-typography--headline6 mb-3">Quality</h3>
+                    <p class="mdc-typography--body2">
+                        We source only the finest hair products, ensuring each item meets our strict quality standards.
+                    </p>
+                </div>
+
+                <div class="mdc-card value-card">
+                    <div class="feature-icon">
+                        <span class="material-icons">support_agent</span>
+                    </div>
+                    <h3 class="mdc-typography--headline6 mb-3">Service</h3>
+                    <p class="mdc-typography--body2">
+                        Our dedicated team provides exceptional customer service and expert advice for all your hair needs.
+                    </p>
+                </div>
+
+                <div class="mdc-card value-card">
+                    <div class="feature-icon">
+                        <span class="material-icons">diversity_3</span>
+                    </div>
+                    <h3 class="mdc-typography--headline6 mb-3">Community</h3>
+                    <p class="mdc-typography--body2">
+                        We believe in building a strong community of customers who share our passion for beautiful hair.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Why Choose Us -->
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12 mt-12">
+            <div class="mdc-card p-8">
+                <h2 class="mdc-typography--headline4 text-center mb-8">Why Choose Us</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="material-icons text-primary mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="mdc-typography--subtitle1 font-medium">Premium Quality Products</h4>
+                                    <p class="mdc-typography--body2">Carefully curated selection of top-tier hair products</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="material-icons text-primary mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="mdc-typography--subtitle1 font-medium">Expert Advice</h4>
+                                    <p class="mdc-typography--body2">Professional guidance for your hair care journey</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="material-icons text-primary mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="mdc-typography--subtitle1 font-medium">Fast Shipping</h4>
+                                    <p class="mdc-typography--body2">Quick and reliable delivery to your doorstep</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="material-icons text-primary mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="mdc-typography--subtitle1 font-medium">Satisfaction Guarantee</h4>
+                                    <p class="mdc-typography--body2">Your satisfaction is our top priority</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="material-icons text-primary mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="mdc-typography--subtitle1 font-medium">Secure Shopping</h4>
+                                    <p class="mdc-typography--body2">Safe and protected online transactions</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="material-icons text-primary mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="mdc-typography--subtitle1 font-medium">Customer Support</h4>
+                                    <p class="mdc-typography--body2">Dedicated team ready to assist you</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12 mt-12">
+            <div class="mdc-card p-8 text-center">
+                <h2 class="mdc-typography--headline4 mb-4">Get in Touch</h2>
+                <p class="mdc-typography--body1 mb-6">
+                    Have questions or feedback? We'd love to hear from you!
+                </p>
+                <a href="{% url 'customer_support' %}" class="mdc-button mdc-button--raised">
+                    <span class="mdc-button__ripple"></span>
+                    <span class="material-icons mr-2">contact_support</span>
+                    <span class="mdc-button__label">Contact Us</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+    });
+</script>
+{% endblock %}

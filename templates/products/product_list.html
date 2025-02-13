@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {% if category %}{{ category.get_name_display }}{% else %}All Products{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .product-card__media {
+        height: 280px;
+        overflow: hidden;
+        position: relative;
+    }
+    .product-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-card:hover .product-card__media img {
+        transform: scale(1.05);
+    }
+    .sale-badge {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #f44336;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-weight: 500;
+        z-index: 1;
+    }
+    .product-card__content {
+        padding: 16px;
+        position: relative;
+    }
+    .product-actions {
+        position: absolute;
+        right: 16px;
+        bottom: 16px;
+        display: flex;
+        gap: 8px;
+        z-index: 2;
+    }
+    .action-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: none;
+    }
+    .action-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .action-button.wishlist {
+        color: #f44336;
+    }
+    .action-button.cart {
+        color: var(--mdc-theme-primary);
+    }
+    .action-button.in-wishlist {
+        background-color: #f44336;
+        color: white;
+    }
+    .product-price {
+        margin-bottom: 48px; /* Space for action buttons */
+    }
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #323232;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        z-index: 1000;
+        display: none;
+    }
+    .view-details-link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .view-details-link:hover {
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <h1 class="mdc-typography--headline4 mb-6">
+                {% if category %}{{ category.get_name_display }}{% else %}All Products{% endif %}
+            </h1>
+            
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+                    <div class="mdc-card product-card">
+                        <a href="{{ product.get_absolute_url }}" class="view-details-link">
+                            <div class="product-card__media">
+                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                     alt="{{ product.name }}">
+                                {% if product.on_sale %}
+                                    <span class="sale-badge">Save {{ product.discount_percentage }}%</span>
+                                {% endif %}
+                            </div>
+                            <div class="product-card__content">
+                                <h2 class="mdc-typography--headline6 mb-2">{{ product.name }}</h2>
+                                <div class="product-price">
+                                    {% if product.on_sale and product.sale_price %}
+                                        <div class="flex items-center">
+                                            <span class="line-through text-gray-500 mr-2">₦{{ product.price }}</span>
+                                            <span class="text-red-500 font-bold text-lg">₦{{ product.sale_price }}</span>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-gray-800 font-bold text-lg">₦{{ product.price }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                        <div class="product-actions">
+                            <form action="{% url 'cart:cart_add' product.id %}" method="post" class="add-to-cart-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="action-button cart" title="Add to Cart">
+                                    <span class="material-icons">shopping_cart</span>
+                                </button>
+                            </form>
+                            {% if user.is_authenticated %}
+                            <form action="{% url 'products:add_to_wishlist' product.id %}" method="post" class="wishlist-form">
+                                {% csrf_token %}
+                                <button type="submit" class="action-button wishlist {% if product in user.wishlist.products.all %}in-wishlist{% endif %}" title="Add to Wishlist">
+                                    <span class="material-icons">{% if product in user.wishlist.products.all %}favorite{% else %}favorite_border{% endif %}</span>
+                                </button>
+                            </form>
+                            {% endif %}
+                </div>
+            </div>
+        {% empty %}
+                    <p class="col-span-full text-center text-gray-500 mdc-typography--body1">No products found.</p>
+        {% endfor %}
+    </div>
+    
+    {% if products.has_other_pages %}
+    <div class="flex justify-center mt-8">
+                <nav class="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if products.has_previous %}
+                        <a href="?page={{ products.previous_page_number }}" 
+                           class="mdc-button">
+                            <span class="mdc-button__ripple"></span>
+                            <span class="material-icons">chevron_left</span>
+                            <span class="mdc-button__label">Previous</span>
+                </a>
+            {% endif %}
+            
+            {% for num in products.paginator.page_range %}
+                {% if products.number == num %}
+                            <button class="mdc-button mdc-button--raised">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">{{ num }}</span>
+                            </button>
+                {% else %}
+                            <a href="?page={{ num }}" class="mdc-button">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">{{ num }}</span>
+                            </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if products.has_next %}
+                        <a href="?page={{ products.next_page_number }}" 
+                           class="mdc-button">
+                            <span class="mdc-button__ripple"></span>
+                            <span class="mdc-button__label">Next</span>
+                            <span class="material-icons">chevron_right</span>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Toast notification function
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Handle Add to Cart form submissions
+        document.querySelectorAll('.add-to-cart-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showToast('Product added to cart');
+                })
+                .catch(error => {
+                    showToast('Error adding product to cart');
+                });
+            });
+        });
+
+        // Handle Wishlist form submissions
+        document.querySelectorAll('.wishlist-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const button = this.querySelector('.wishlist');
+                    const icon = button.querySelector('.material-icons');
+                    if (button.classList.contains('in-wishlist')) {
+                        button.classList.remove('in-wishlist');
+                        icon.textContent = 'favorite_border';
+                        showToast('Product removed from wishlist');
+                    } else {
+                        button.classList.add('in-wishlist');
+                        icon.textContent = 'favorite';
+                        showToast('Product added to wishlist');
+                    }
+                })
+                .catch(error => {
+                    showToast('Error updating wishlist');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
+

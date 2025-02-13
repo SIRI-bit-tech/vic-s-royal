@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .cart-item {
+        border-bottom: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+    .cart-item:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+    .product-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-image:hover img {
+        transform: scale(1.05);
+    }
+    .quantity-input {
+        width: 80px;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px;
+    }
+    .remove-button {
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    .remove-button:hover {
+        background-color: rgba(239,68,68,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <h1 class="mdc-typography--headline4 mb-6">Shopping Cart</h1>
+
+      {% if cart %}
+                <div class="mdc-card">
+                    <div class="p-6">
+                      {% for item in cart %}
+                            <div class="cart-item py-6">
+                                <div class="flex items-center">
+                                    <div class="product-image flex-shrink-0">
+                                        <a href="{{ item.product.get_absolute_url }}">
+                                            <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                                 alt="{{ item.product.name }}">
+                                        </a>
+                                    </div>
+                                    <div class="ml-6 flex-grow">
+                                        <h2 class="mdc-typography--headline6 mb-2">
+                                            <a href="{{ item.product.get_absolute_url }}" class="hover:text-blue-600 transition-colors">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </h2>
+                                        {% if item.product.on_sale and item.product.sale_price %}
+                                            <div class="flex items-center mb-2">
+                                                <span class="line-through text-gray-500 mr-2">₦{{ item.product.price }}</span>
+                                                <span class="text-red-500 font-bold">₦{{ item.price }}</span>
+                                                <span class="ml-2 text-green-600">(-{{ item.product.discount_percentage }}%)</span>
+                                            </div>
+                                        {% else %}
+                                            <p class="text-gray-800 font-bold mb-2">₦{{ item.price }}</p>
+                                        {% endif %}
+                                        <form action="{% url 'cart:cart_add' item.product.id %}" method="post" class="flex items-center">
+                                            {% csrf_token %}
+                                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
+                                                   class="quantity-input mdc-text-field__input">
+                                            <button type="submit" class="mdc-button mdc-button--raised ml-4">
+                                                <span class="mdc-button__ripple"></span>
+                                                <span class="material-icons mr-2">update</span>
+                                                <span class="mdc-button__label">Update</span>
+                                            </button>
+                                        </form>
+                                      </div>
+                                    <div class="ml-6 flex items-center">
+                                        <p class="text-lg font-bold mr-6">₦{{ item.total_price }}</p>
+                                        <form action="{% url 'cart:cart_remove' item.product.id %}" method="post">
+                                          {% csrf_token %}
+                                            <button type="submit" class="remove-button text-red-500 hover:text-red-700">
+                                                <span class="material-icons">delete</span>
+                                          </button>
+                                      </form>
+                                    </div>
+                                </div>
+                            </div>
+                      {% endfor %}
+
+                        <div class="mt-6 flex justify-between items-center">
+                            <div>
+                                <p class="mdc-typography--headline6">Total: ₦{{ cart.get_total_price }}</p>
+                                {% if cart.get_discount %}
+                                    <p class="text-green-600">
+                                        <span class="material-icons align-middle mr-1">local_offer</span>
+                                        Discount: ₦{{ cart.get_discount }}
+                                    </p>
+                                {% endif %}
+          </div>
+                            <div class="flex space-x-4">
+                                <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--outlined">
+                                    <span class="mdc-button__ripple"></span>
+                                    <span class="material-icons mr-2">arrow_back</span>
+                                    <span class="mdc-button__label">Continue Shopping</span>
+                                </a>
+                                <a href="{% url 'orders:order_create' %}" class="mdc-button mdc-button--raised">
+                                    <span class="mdc-button__ripple"></span>
+                                    <span class="material-icons mr-2">shopping_cart_checkout</span>
+                                    <span class="mdc-button__label">Checkout</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+          </div>
+      {% else %}
+                <div class="mdc-card p-8 text-center">
+                    <span class="material-icons text-gray-400 text-6xl mb-4">shopping_cart</span>
+                    <p class="mdc-typography--body1 text-gray-600 mb-6">Your cart is empty.</p>
+                    <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--raised">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="material-icons mr-2">shopping_bag</span>
+                        <span class="mdc-button__label">Start Shopping</span>
+                    </a>
+                </div>
+      {% endif %}
+        </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Initialize text fields
+        document.querySelectorAll('.mdc-text-field').forEach(function(textField) {
+            new mdc.textField.MDCTextField(textField);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Your Profile{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        margin-bottom: 24px;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .order-card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .order-card:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+    .product-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-image:hover img {
+        transform: scale(1.05);
+    }
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .status-completed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .tab-button {
+        padding: 12px 24px;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    .tab-button.active {
+        border-bottom-color: var(--mdc-theme-primary);
+        color: var(--mdc-theme-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <div class="mdc-card p-6">
+                <h1 class="mdc-typography--headline4 mb-6">Your Profile</h1>
+                
+                <!-- Profile Information -->
+                <div class="flex items-center mb-8">
+                    <span class="material-icons text-gray-400 text-5xl mr-4">account_circle</span>
+                    <div>
+                        <h2 class="mdc-typography--headline6">{{ user.username }}</h2>
+                        <p class="mdc-typography--body1 text-gray-600">{{ user.email }}</p>
+                    </div>
+                    <a href="{% url 'accounts:edit_profile' %}" class="mdc-button mdc-button--outlined ml-auto">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="material-icons mr-2">edit</span>
+                        <span class="mdc-button__label">Edit Profile</span>
+                    </a>
+                </div>
+                
+                <!-- Orders Section -->
+                <div class="mb-8">
+                    <h2 class="mdc-typography--headline5 mb-4">Your Orders</h2>
+                    {% if orders %}
+                            {% for order in orders %}
+                            <div class="mdc-card order-card p-4 mb-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <p class="mdc-typography--subtitle1">Order #{{ order.id }}</p>
+                                        <p class="mdc-typography--body2 text-gray-600">{{ order.created|date:"F j, Y" }}</p>
+                                    </div>
+                                    <span class="status-badge {% if order.paid %}status-completed{% else %}status-pending{% endif %}">
+                                        {% if order.paid %}Completed{% else %}Pending{% endif %}
+                                    </span>
+                                </div>
+                                <button onclick="toggleOrderDetails('order-details-{{ order.id }}')" 
+                                        class="mdc-button">
+                                    <span class="mdc-button__ripple"></span>
+                                    <span class="material-icons mr-2">visibility</span>
+                                    <span class="mdc-button__label">View Details</span>
+                                </button>
+                                <div id="order-details-{{ order.id }}" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                                            {% for item in order.items.all %}
+                                        <div class="flex items-center py-2">
+                                            <div class="product-image flex-shrink-0">
+                                                <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                                     alt="{{ item.product.name }}">
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="mdc-typography--subtitle1">{{ item.product.name }}</p>
+                                                <p class="mdc-typography--body2 text-gray-600">
+                                                    Quantity: {{ item.quantity }} × ₦{{ item.price }}
+                                                </p>
+                                            </div>
+                                            <p class="ml-auto font-bold">₦{{ item.get_cost }}</p>
+                                        </div>
+                                            {% endfor %}
+                                    <div class="mt-4 pt-4 border-t">
+                                        <p class="mdc-typography--headline6 text-right">
+                                            Total: ₦{{ order.get_total_cost }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                <!-- Pagination -->
+                        {% if orders.has_other_pages %}
+                            <div class="flex justify-center mt-6">
+                                <nav class="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {% if orders.has_previous %}
+                                        <a href="?page={{ orders.previous_page_number }}" 
+                                           class="mdc-button">
+                                            <span class="mdc-button__ripple"></span>
+                                            <span class="material-icons">chevron_left</span>
+                                            <span class="mdc-button__label">Previous</span>
+                                        </a>
+                        {% endif %}
+                                    
+                                    {% for num in orders.paginator.page_range %}
+                                        {% if orders.number == num %}
+                                            <button class="mdc-button mdc-button--raised">
+                                                <span class="mdc-button__ripple"></span>
+                                                <span class="mdc-button__label">{{ num }}</span>
+                                            </button>
+                            {% else %}
+                                            <a href="?page={{ num }}" class="mdc-button">
+                                                <span class="mdc-button__ripple"></span>
+                                                <span class="mdc-button__label">{{ num }}</span>
+                                            </a>
+                            {% endif %}
+                        {% endfor %}
+                                    
+                        {% if orders.has_next %}
+                                        <a href="?page={{ orders.next_page_number }}" 
+                                           class="mdc-button">
+                                            <span class="mdc-button__ripple"></span>
+                                            <span class="mdc-button__label">Next</span>
+                                            <span class="material-icons">chevron_right</span>
+                                        </a>
+                                    {% endif %}
+                                </nav>
+                            </div>
+                        {% endif %}
+            {% else %}
+                        <div class="text-center py-8">
+                            <span class="material-icons text-gray-400 text-6xl mb-4">shopping_bag</span>
+                            <p class="mdc-typography--body1 text-gray-600">You haven't placed any orders yet.</p>
+                        </div>
+            {% endif %}
+    </div>
+
+    <!-- Wishlist Section -->
+                <div>
+                    <h2 class="mdc-typography--headline5 mb-4">Your Wishlist</h2>
+        {% if wishlist_items %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for product in wishlist_items %}
+                                <div class="mdc-card h-full">
+                                    <div class="product-image">
+                        <a href="{{ product.get_absolute_url }}">
+                            <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                                 alt="{{ product.name }}">
+                        </a>
+                                    </div>
+                        <div class="p-4">
+                                        <h3 class="mdc-typography--headline6 mb-2">{{ product.name }}</h3>
+                                        {% if product.on_sale and product.sale_price %}
+                                            <div class="flex items-center mb-4">
+                                                <span class="line-through text-gray-500 mr-2">₦{{ product.price }}</span>
+                                                <span class="text-red-500 font-bold">₦{{ product.sale_price }}</span>
+                                            </div>
+                                        {% else %}
+                                            <p class="text-gray-800 font-bold mb-4">₦{{ product.price }}</p>
+                                        {% endif %}
+                            <div class="flex justify-between items-center">
+                                            <a href="{{ product.get_absolute_url }}" class="mdc-button mdc-button--raised">
+                                                <span class="mdc-button__ripple"></span>
+                                                <span class="material-icons mr-2">visibility</span>
+                                                <span class="mdc-button__label">View Details</span>
+                                </a>
+                                <form action="{% url 'accounts:remove_from_wishlist' product.id %}" method="post">
+                                    {% csrf_token %}
+                                                <button type="submit" class="mdc-icon-button text-red-500 hover:text-red-700">
+                                                    <span class="material-icons">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+                        <div class="text-center py-8">
+                            <span class="material-icons text-gray-400 text-6xl mb-4">favorite_border</span>
+                            <p class="mdc-typography--body1 text-gray-600">Your wishlist is empty.</p>
+                        </div>
+        {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Initialize icon buttons
+        document.querySelectorAll('.mdc-icon-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+            buttonEl.unbounded = true;
+        });
+    });
+
+function toggleOrderDetails(orderId) {
+        const detailsRow = document.getElementById(orderId);
+    detailsRow.classList.toggle('hidden');
+}
+</script>
+{% endblock %}

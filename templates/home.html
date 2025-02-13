@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Welcome to Vic's Royal Beauty{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .hero-banner {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
+    }
+    .product-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+    .product-card__media {
+        height: 280px;
+        overflow: hidden;
+        position: relative;
+    }
+    .product-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-card:hover .product-card__media img {
+        transform: scale(1.05);
+    }
+    .sale-badge {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #f44336;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-weight: 500;
+        z-index: 1;
+    }
+    .product-actions {
+        position: absolute;
+        right: 16px;
+        bottom: 16px;
+        display: flex;
+        gap: 8px;
+        z-index: 2;
+    }
+    .action-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: none;
+    }
+    .action-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .action-button.wishlist {
+        color: #f44336;
+    }
+    .action-button.cart {
+        color: var(--mdc-theme-primary);
+    }
+    .action-button.in-wishlist {
+        background-color: #f44336;
+        color: white;
+    }
+    .product-price {
+        margin-bottom: 48px; /* Space for action buttons */
+    }
+    .view-details-link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .view-details-link:hover {
+        text-decoration: none;
+    }
+    .swiper-container {
+        width: 100%;
+        height: 500px;
+        margin-bottom: 2rem;
+    }
+    .swiper-slide {
+        position: relative;
+    }
+    .swiper-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <!-- Hero Banner Section -->
+        {% if hero_banners %}
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <div class="swiper-container hero-banner">
+                <div class="swiper-wrapper">
+                    {% for banner in hero_banners %}
+                    <div class="swiper-slide">
+                        <div class="relative h-[500px]">
+                            <img src="{{ banner.image.url }}" 
+                                 alt="{{ banner.title }}" 
+                                 class="w-full h-full object-cover">
+                            <div class="absolute inset-0 z-10 flex flex-col items-center justify-center text-white text-center px-4">
+                                <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">{{ banner.title }}</h1>
+                                {% if banner.subtitle %}
+                                    <p class="text-xl md:text-2xl mb-8 max-w-2xl animate-fade-in-up">{{ banner.subtitle }}</p>
+                                {% endif %}
+                                <button class="mdc-button mdc-button--raised" onclick="window.location.href='{{ banner.button_link }}'">
+                                    <span class="mdc-button__ripple"></span>
+                                    <span class="mdc-button__label">{{ banner.button_text }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Special Offers Section -->
+        {% if special_offers %}
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <h2 class="mdc-typography--headline4 mb-8">Special Offers</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for product in special_offers %}
+                <div class="mdc-card product-card">
+                    <a href="{{ product.get_absolute_url }}" class="view-details-link">
+                        <div class="product-card__media">
+                            <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" 
+                                 alt="{{ product.name }}">
+                            <span class="sale-badge">Save {{ product.discount_percentage }}%</span>
+                        </div>
+                        <div class="product-card__content p-4">
+                            <h3 class="mdc-typography--headline6 mb-2">{{ product.name }}</h3>
+                            <div class="product-price">
+                                <div class="flex items-center">
+                                    <span class="line-through text-gray-500 mr-2">₦{{ product.price }}</span>
+                                    <span class="text-red-500 font-bold text-lg">₦{{ product.sale_price }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="product-actions">
+                        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="add-to-cart-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="action-button cart" title="Add to Cart">
+                                <span class="material-icons">shopping_cart</span>
+                            </button>
+                        </form>
+                        {% if user.is_authenticated %}
+                        <form action="{% url 'products:add_to_wishlist' product.id %}" method="post" class="wishlist-form">
+                            {% csrf_token %}
+                            <button type="submit" class="action-button wishlist {% if product in user.wishlist.products.all %}in-wishlist{% endif %}" title="Add to Wishlist">
+                                <span class="material-icons">{% if product in user.wishlist.products.all %}favorite{% else %}favorite_border{% endif %}</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Categories Section -->
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12 mt-12">
+            <h2 class="mdc-typography--headline4 mb-8">Shop by Category</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for category in categories %}
+                    {% if category.active %}
+                    <div class="mdc-card">
+                        <div class="relative h-[200px] overflow-hidden">
+                            {% if category.image %}
+                                <img src="{{ category.image.url }}" 
+                                     alt="{{ category.name }}" 
+                                     class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300">
+                            {% endif %}
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+                                <div>
+                                    <h3 class="text-white text-xl font-bold mb-2">{{ category.name }}</h3>
+                                    <p class="text-white/80 text-sm">{{ category.products.count }} Products</p>
+                                </div>
+                            </div>
+                            <a href="{{ category.get_absolute_url }}" class="absolute inset-0" aria-label="View {{ category.name }}"></a>
+                        </div>
+                    </div>
+                    {% endif %}
+            {% endfor %}
+            </div>
+        </div>
+
+        <!-- Featured Products Section -->
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12 mt-12">
+            <h2 class="mdc-typography--headline4 mb-8">Featured Products</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for product in featured_products %}
+                <div class="mdc-card product-card">
+                    <a href="{{ product.get_absolute_url }}" class="view-details-link">
+                        <div class="product-card__media">
+                            <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                 alt="{{ product.name }}">
+                            {% if product.on_sale %}
+                                <span class="sale-badge">Save {{ product.discount_percentage }}%</span>
+                            {% endif %}
+                        </div>
+                        <div class="product-card__content p-4">
+                            <h3 class="mdc-typography--headline6 mb-2">{{ product.name }}</h3>
+                            <div class="product-price">
+                                {% if product.on_sale and product.sale_price %}
+                                    <div class="flex items-center">
+                                        <span class="line-through text-gray-500 mr-2">₦{{ product.price }}</span>
+                                        <span class="text-red-500 font-bold text-lg">₦{{ product.sale_price }}</span>
+                                    </div>
+                                {% else %}
+                                    <p class="text-gray-800 font-bold text-lg">₦{{ product.price }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    <div class="product-actions">
+                        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="add-to-cart-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="action-button cart" title="Add to Cart">
+                                <span class="material-icons">shopping_cart</span>
+                            </button>
+                        </form>
+                        {% if user.is_authenticated %}
+                        <form action="{% url 'products:add_to_wishlist' product.id %}" method="post" class="wishlist-form">
+                            {% csrf_token %}
+                            <button type="submit" class="action-button wishlist {% if product in user.wishlist.products.all %}in-wishlist{% endif %}" title="Add to Wishlist">
+                                <span class="material-icons">{% if product in user.wishlist.products.all %}favorite{% else %}favorite_border{% endif %}</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Hair Care Tips Section -->
+        {% if hair_care_tips %}
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12 mt-12">
+            <h2 class="mdc-typography--headline4 mb-8">Hair Care Tips & Advice</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for post in hair_care_tips %}
+                <div class="mdc-card h-full">
+                    <div class="relative h-[240px]">
+                        <img src="{{ post.image.url }}" 
+                             alt="{{ post.title }}" 
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="mdc-typography--headline6 mb-4">{{ post.title }}</h3>
+                        <p class="mdc-typography--body2 text-gray-600 mb-4">{{ post.content|truncatewords:30 }}</p>
+                        <button class="mdc-button mdc-button--outlined" 
+                                onclick="window.location.href='{{ post.get_absolute_url }}'">
+                            <span class="mdc-button__ripple"></span>
+                            <span class="mdc-button__label">Read More</span>
+                        </button>
+                    </div>
+            </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Initialize Swiper
+        new Swiper('.swiper-container', {
+            loop: true,
+            speed: 1000,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            effect: 'fade',
+            fadeEffect: {
+                crossFade: true
+            }
+        });
+
+        // Handle Add to Cart AJAX
+        document.querySelectorAll('.add-to-cart-form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showToast('Product added to cart');
+                })
+                .catch(error => {
+                    showToast('Error adding product to cart');
+                });
+            });
+        });
+
+        // Handle Wishlist AJAX
+        document.querySelectorAll('.wishlist-form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const button = form.querySelector('button');
+                const icon = button.querySelector('.material-icons');
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    button.classList.toggle('in-wishlist');
+                    icon.textContent = button.classList.contains('in-wishlist') ? 'favorite' : 'favorite_border';
+                    showToast(button.classList.contains('in-wishlist') ? 'Added to wishlist' : 'Removed from wishlist');
+                })
+                .catch(error => {
+                    showToast('Error updating wishlist');
+                });
+            });
+        });
+
+        // Toast notification function
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) {
+                const toastDiv = document.createElement('div');
+                toastDiv.id = 'toast';
+                toastDiv.className = 'toast';
+                document.body.appendChild(toastDiv);
+            }
+            
+            const toastElement = document.getElementById('toast');
+            toastElement.textContent = message;
+            toastElement.style.display = 'block';
+            
+            setTimeout(() => {
+                toastElement.style.display = 'none';
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}

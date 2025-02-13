@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .mdc-text-field {
+        width: 100%;
+        margin-bottom: 24px;
+        background-color: #f5f5f5;
+        border-radius: 8px 8px 0 0;
+    }
+    .mdc-text-field--filled {
+        --mdc-theme-primary: var(--mdc-theme-primary);
+        background-color: #f5f5f5;
+    }
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+        background-color: #f5f5f5;
+    }
+    .mdc-text-field--filled:hover {
+        background-color: #eeeeee;
+    }
+    .mdc-text-field--focused {
+        background-color: #f5f5f5;
+    }
+    .mdc-text-field__input {
+        padding: 20px 16px 6px !important;
+    }
+    .mdc-floating-label {
+        padding-left: 16px;
+        color: rgba(0, 0, 0, 0.6);
+    }
+    .mdc-text-field--filled .mdc-floating-label--float-above {
+        transform: translateY(-106%) scale(0.75);
+    }
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .order-summary {
+        position: sticky;
+        top: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <h1 class="mdc-typography--headline4 mb-6">Checkout</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Shipping Information Form -->
+                <div class="lg:col-span-2">
+                    <div class="mdc-card p-6">
+                        <h2 class="mdc-typography--headline5 mb-6">Shipping Information</h2>
+                        
+                        <form method="post" class="space-y-6">
+                            {% csrf_token %}
+                            
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.first_name.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="first-name-label">First Name</span>
+                                <input type="text" name="first_name" id="first_name" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.first_name.value|default:'' }}"
+                                       aria-labelledby="first-name-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.first_name.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.first_name.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.last_name.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="last-name-label">Last Name</span>
+                                <input type="text" name="last_name" id="last_name" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.last_name.value|default:'' }}"
+                                       aria-labelledby="last-name-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.last_name.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.last_name.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.email.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="email-label">Email</span>
+                                <input type="email" name="email" id="email" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.email.value|default:'' }}"
+                                       aria-labelledby="email-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.email.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.email.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.phone.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="phone-label">Phone Number</span>
+                                <input type="tel" name="phone" id="phone" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.phone.value|default:'' }}"
+                                       aria-labelledby="phone-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.phone.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.phone.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.address.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="address-label">Address</span>
+                                <input type="text" name="address" id="address" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.address.value|default:'' }}"
+                                       aria-labelledby="address-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.address.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.address.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.city.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="city-label">City</span>
+                                <input type="text" name="city" id="city" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.city.value|default:'' }}"
+                                       aria-labelledby="city-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.city.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.city.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.state.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="state-label">State</span>
+                                <input type="text" name="state" id="state" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.state.value|default:'' }}"
+                                       aria-labelledby="state-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.state.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.state.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="mdc-text-field mdc-text-field--filled {% if form.postal_code.errors %}mdc-text-field--invalid{% endif %}">
+                                <span class="mdc-text-field__ripple"></span>
+                                <span class="mdc-floating-label" id="postal-code-label">Postal Code</span>
+                                <input type="text" name="postal_code" id="postal_code" 
+                                       class="mdc-text-field__input"
+                                       value="{{ form.postal_code.value|default:'' }}"
+                                       aria-labelledby="postal-code-label"
+                                       required>
+                                <span class="mdc-line-ripple"></span>
+                            </div>
+                            {% if form.postal_code.errors %}
+                                <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                                    {{ form.postal_code.errors.0 }}
+                                </p>
+                            {% endif %}
+
+                            <div class="flex justify-end mt-8">
+                                <button type="submit" class="mdc-button mdc-button--raised">
+                                    <span class="mdc-button__ripple"></span>
+                                    <span class="material-icons mr-2">shopping_cart_checkout</span>
+                                    <span class="mdc-button__label">Place Order</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="mdc-card p-6 order-summary">
+                        <h2 class="mdc-typography--headline5 mb-6">Order Summary</h2>
+                        
+                        <div class="space-y-4">
+                    {% for item in cart %}
+                                <div class="flex items-center space-x-4">
+                                    <div class="product-image">
+                                        <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                             alt="{{ item.product.name }}">
+                                    </div>
+                                    <div class="flex-grow">
+                                        <h3 class="mdc-typography--subtitle2">{{ item.product.name }}</h3>
+                                        <p class="text-sm text-gray-600">Quantity: {{ item.quantity }}</p>
+                                        {% if item.product.on_sale and item.product.sale_price %}
+                                            <div class="flex items-center">
+                                                <span class="line-through text-gray-500 text-sm mr-2">₦{{ item.product.price }}</span>
+                                                <span class="font-medium">₦{{ item.price }}</span>
+                                                <span class="ml-2 text-green-600 text-sm">(-{{ item.product.discount_percentage }}%)</span>
+                                            </div>
+                                        {% else %}
+                                            <p class="font-medium">₦{{ item.price }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span>₦{{ cart.get_total_price }}</span>
+                            </div>
+                            <div class="flex justify-between mb-2">
+                                {% comment %} <span class="text-gray-600">Shipping</span>
+                                <span class="text-green-600">Free</span> {% endcomment %}
+                            </div>
+                            {% if cart.get_discount %}
+                            <div class="flex justify-between mb-2">
+                                <span class="text-gray-600">Discount</span>
+                                <span class="text-red-600">-₦{{ cart.get_discount }}</span>
+                            </div>
+                        {% endif %}
+                            <div class="flex justify-between font-bold mt-4 pt-4 border-t">
+                                <span>Total</span>
+                                <span class="text-xl">₦{{ cart.get_total_price }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Initialize text fields
+        document.querySelectorAll('.mdc-text-field').forEach(function(textField) {
+            new mdc.textField.MDCTextField(textField);
+        });
+    });
+</script>
+{% endblock %}

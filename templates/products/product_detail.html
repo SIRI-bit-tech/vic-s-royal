@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block meta_description %}{{ product.description|truncatewords:25 }}{% endblock %}
+{% block meta_keywords %}{{ product.name }}, {{ product.category.name }}, hair products, {{ product.color }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .product-image {
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-image:hover img {
+        transform: scale(1.05);
+    }
+    .sale-badge {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #f44336;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-weight: 500;
+        z-index: 1;
+    }
+    .review-card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .review-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .social-share-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    .social-share-button:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Schema.org Product Markup -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ product.name }}",
+    "image": "{% if product.image %}{{ request.scheme }}://{{ request.get_host }}{{ product.image.url }}{% endif %}",
+    "description": "{{ product.description }}",
+    "sku": "{{ product.id }}",
+    "brand": {
+        "@type": "Brand",
+        "name": "Vic's Royal Beauty"
+    },
+    "offers": {
+        "@type": "Offer",
+        "url": "{{ request.build_absolute_uri }}",
+        "priceCurrency": "NGN",
+        "price": "{{ product.price }}",
+        "availability": "https://schema.org/InStock"
+    }
+    {% if product.reviews.exists %},
+    "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "{{ product.average_rating }}",
+        "reviewCount": "{{ product.reviews.count }}"
+    },
+    "review": [
+        {% for review in product.reviews.all %}
+        {
+            "@type": "Review",
+            "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": "{{ review.rating }}"
+            },
+            "author": {
+                "@type": "Person",
+                "name": "{{ review.user.username }}"
+            },
+            "reviewBody": "{{ review.comment }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+    {% endif %}
+}
+</script>
+
+<!-- Breadcrumb Schema Markup -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "{{ request.scheme }}://{{ request.get_host }}"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "{{ product.category.name }}",
+            "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'products:product_list_by_category' product.category.slug %}"
+        },
+        {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "{{ product.name }}"
+        }
+    ]
+}
+</script>
+
+<div class="bg-white bg-opacity-90 rounded-lg shadow-lg p-6">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-6 text-gray-600" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'home' %}" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <span class="material-icons mr-2">home</span>
+                    Home
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <span class="material-icons text-gray-400">chevron_right</span>
+                    <a href="{{ product.category.get_absolute_url }}" class="ml-1 text-gray-700 hover:text-blue-600 transition-colors">
+                        {{ product.category.name }}
+                    </a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <span class="material-icons text-gray-400">chevron_right</span>
+                    <span class="ml-1 text-gray-500">{{ product.name }}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="product-image">
+            <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                 alt="{{ product.name }}">
+            {% if product.on_sale %}
+                <span class="sale-badge">-{{ product.discount_percentage }}%</span>
+            {% endif %}
+        </div>
+        <div>
+            <h1 class="mdc-typography--headline4 mb-4">{{ product.name }}</h1>
+            {% if product.on_sale and product.sale_price %}
+                <div class="flex items-center mb-4">
+                    <span class="line-through text-gray-500 mr-2 text-2xl">₦{{ product.price }}</span>
+                    <span class="text-red-500 font-bold text-3xl">₦{{ product.sale_price }}</span>
+                </div>
+            {% else %}
+            <p class="text-2xl font-semibold mb-4">₦{{ product.price }}</p>
+            {% endif %}
+
+            <div class="space-y-4 mb-6">
+                <div class="flex items-center">
+                    <span class="material-icons mr-2">category</span>
+                    <span class="font-semibold">Category:</span>
+                    <span class="ml-2">{{ product.category.get_name_display }}</span>
+            </div>
+                <div class="flex items-center">
+                    <span class="material-icons mr-2">straighten</span>
+                    <span class="font-semibold">Size:</span>
+                    <span class="ml-2">{{ product.get_size_display }}</span>
+            </div>
+                <div class="flex items-center">
+                    <span class="material-icons mr-2">height</span>
+                    <span class="font-semibold">Length:</span>
+                    <span class="ml-2">{{ product.get_length_display }}</span>
+            </div>
+            {% if product.color %}
+                <div class="flex items-center">
+                    <span class="material-icons mr-2">palette</span>
+                    <span class="font-semibold">Color:</span>
+                    <span class="ml-2">{{ product.color }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <p class="mdc-typography--body1 text-gray-700 mb-6">{{ product.description }}</p>
+
+            <form action="{% url 'cart:cart_add' product.id %}" method="post" class="mb-4 add-to-cart-form">
+                {{ cart_product_form }}
+                {% csrf_token %}
+                <button type="submit" class="mdc-button mdc-button--raised">
+                    <span class="mdc-button__ripple"></span>
+                    <span class="material-icons mr-2">add_shopping_cart</span>
+                    <span class="mdc-button__label">Add to cart</span>
+                </button>
+            </form>
+
+            <form action="{% url 'products:add_to_wishlist' product.id %}" method="post" class="add-to-wishlist-form">
+                {% csrf_token %}
+                <button type="submit" class="mdc-button mdc-button--outlined">
+                    <span class="mdc-button__ripple"></span>
+                    <span class="material-icons mr-2">favorite_border</span>
+                    <span class="mdc-button__label">Add to Wishlist</span>
+                </button>
+            </form>
+
+            <div class="mt-8">
+                <h3 class="mdc-typography--subtitle1 mb-4">Share:</h3>
+                <div class="flex space-x-4">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" 
+                       target="_blank" 
+                       class="social-share-button bg-blue-600 text-white hover:bg-blue-700">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ product.name }}" 
+                       target="_blank"
+                       class="social-share-button bg-blue-400 text-white hover:bg-blue-500">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                    <a href="https://wa.me/?text={{ product.name }}%20{{ request.build_absolute_uri }}" 
+                       target="_blank"
+                       class="social-share-button bg-green-500 text-white hover:bg-green-600">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="mt-12">
+        <h2 class="mdc-typography--headline5 mb-6">Reviews</h2>
+        {% for review in product.reviews.all %}
+            <div class="mdc-card review-card p-4 mb-4">
+                <div class="flex items-center mb-2">
+                    <span class="material-icons mr-2">account_circle</span>
+                    <span class="font-semibold mr-2">{{ review.user.username }}</span>
+                    <div class="text-yellow-500">
+                        {% for i in review.rating|ljust:5 %}
+                            {% if i == '1' %}
+                                <span class="material-icons">star</span>
+                            {% else %}
+                                <span class="material-icons">star_border</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <p class="mdc-typography--body2">{{ review.comment }}</p>
+            </div>
+        {% empty %}
+            <p class="mdc-typography--body1 text-gray-500">No reviews yet.</p>
+        {% endfor %}
+
+        {% if user.is_authenticated %}
+            <h3 class="mdc-typography--headline6 mb-4">Add a review</h3>
+            <form action="{% url 'products:add_review' product.id %}" method="post" class="mdc-card p-6">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="rating" class="block mdc-typography--subtitle1 mb-2">Rating</label>
+                    <select name="rating" id="rating" class="mdc-select__native-control block w-full mt-1">
+                        <option value="1">1 star</option>
+                        <option value="2">2 stars</option>
+                        <option value="3">3 stars</option>
+                        <option value="4">4 stars</option>
+                        <option value="5">5 stars</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="comment" class="block mdc-typography--subtitle1 mb-2">Comment</label>
+                    <textarea name="comment" id="comment" rows="4" 
+                              class="mdc-text-field__input block w-full mt-1 p-2 border rounded"></textarea>
+                </div>
+                <button type="submit" class="mdc-button mdc-button--raised">
+                    <span class="mdc-button__ripple"></span>
+                    <span class="material-icons mr-2">rate_review</span>
+                    <span class="mdc-button__label">Submit Review</span>
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Initialize select fields
+        document.querySelectorAll('.mdc-select').forEach(function(selectEl) {
+            new mdc.select.MDCSelect(selectEl);
+        });
+
+        // Initialize text fields
+        document.querySelectorAll('.mdc-text-field').forEach(function(textField) {
+            new mdc.textField.MDCTextField(textField);
+        });
+    });
+</script>
+{% endblock %}

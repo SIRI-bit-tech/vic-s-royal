@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Your Wishlist{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .product-card__media {
+        height: 280px;
+        overflow: hidden;
+        position: relative;
+    }
+    .product-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-card:hover .product-card__media img {
+        transform: scale(1.05);
+    }
+    .remove-button {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        padding: 8px;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+    .remove-button:hover {
+        background: #fff;
+        transform: scale(1.1);
+    }
+    .empty-wishlist {
+        text-align: center;
+        padding: 48px;
+    }
+    .empty-wishlist .material-icons {
+        font-size: 64px;
+        color: #9e9e9e;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mdc-layout-grid">
+    <div class="mdc-layout-grid__inner">
+        <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+            <h1 class="mdc-typography--headline4 mb-6">Your Wishlist</h1>
+            
+            {% if wishlist.products.exists %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {% for product in wishlist.products.all %}
+                        <div class="mdc-card product-card">
+                            <div class="product-card__media">
+                                <a href="{{ product.get_absolute_url }}">
+                                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                         alt="{{ product.name }}">
+                                </a>
+                                <form action="{% url 'products:remove_from_wishlist' product.id %}" method="post" class="remove-button">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-500 hover:text-red-700">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="mdc-card__content p-4">
+                                <h2 class="mdc-typography--headline6 mb-2">{{ product.name }}</h2>
+                                {% if product.on_sale and product.sale_price %}
+                                    <div class="flex items-center mb-4">
+                                        <span class="line-through text-gray-500 mr-2">₦{{ product.price }}</span>
+                                        <span class="text-red-500 font-bold text-lg">₦{{ product.sale_price }}</span>
+                                    </div>
+                                {% else %}
+                                    <p class="text-gray-800 font-bold text-lg mb-4">₦{{ product.price }}</p>
+                                {% endif %}
+                                <div class="mdc-card__actions">
+                                    <button class="mdc-button mdc-button--raised w-full" 
+                                            onclick="window.location.href='{{ product.get_absolute_url }}'">
+                                        <span class="mdc-button__ripple"></span>
+                                        <span class="mdc-button__label">View Details</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="mdc-card empty-wishlist">
+                    <span class="material-icons">favorite_border</span>
+                    <p class="mdc-typography--body1 text-gray-600 mb-6">Your wishlist is empty.</p>
+                    <button class="mdc-button mdc-button--raised" onclick="window.location.href='{% url 'products:product_list' %}'">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="mdc-button__label">Browse Products</span>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+    });
+</script>
+{% endblock %}

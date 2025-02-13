@@ -1,0 +1,483 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Vic's Royal Beauty{% endblock %} | Premium Hair Products</title>
+        
+        <!-- SEO Meta Tags -->
+        <meta name="description" content="{% block meta_description %}Vic's Royal Beauty - Your premier destination for high-quality hair products, including extensions, wigs, and styling tools. Shop our collection today!{% endblock %}">
+        <meta name="keywords" content="{% block meta_keywords %}hair products, hair extensions, wigs, hair care, beauty products, Nigeria{% endblock %}">
+        
+        <!-- Open Graph Meta Tags -->
+        <meta property="og:title" content="{% block og_title %}Vic's Royal Beauty | Premium Hair Products{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}Your premier destination for high-quality hair products{% endblock %}">
+        <meta property="og:image" content="{% block og_image %}{% static 'img/logo.jpg' %}{% endblock %}">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
+        <meta property="og:type" content="website">
+        
+        <!-- Twitter Card Meta Tags -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{% block twitter_title %}Vic's Royal Beauty | Premium Hair Products{% endblock %}">
+        <meta name="twitter:description" content="{% block twitter_description %}Your premier destination for high-quality hair products{% endblock %}">
+        <meta name="twitter:image" content="{% block twitter_image %}{% static 'img/logo.jpg' %}{% endblock %}">
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="{{ request.build_absolute_uri }}">
+        
+        <!-- Favicons -->
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32x32.png' %}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+        <link rel="icon" href="{% static 'img/favicon.ico' %}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16x16.png' %}">
+        <link rel="manifest" href="{% static 'site.webmanifest' %}">
+        
+        <!-- CSS -->
+        <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link href="{% static 'css/main.css' %}" rel="stylesheet">
+        <style>
+            :root {
+                --mdc-theme-primary: #1a73e8;
+                --mdc-theme-secondary: #f44336;
+                --mdc-theme-background: #ffffff;
+                --mdc-theme-surface: #ffffff;
+                --mdc-theme-error: #b00020;
+            }
+            
+            .header-shadow {
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .nav-link {
+                position: relative;
+                color: #5f6368;
+                transition: color 0.3s ease;
+            }
+            
+            .nav-link:hover {
+                color: var(--mdc-theme-primary);
+            }
+            
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                bottom: -2px;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background-color: var(--mdc-theme-primary);
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+            }
+            
+            .nav-link:hover::after {
+                transform: scaleX(1);
+            }
+            
+            .mdc-button {
+                text-transform: none;
+                font-weight: 500;
+                border-radius: 8px;
+            }
+            
+            .mdc-button--raised {
+                background-color: var(--mdc-theme-primary);
+            }
+            
+            .mdc-card {
+                border-radius: 16px;
+                transition: all 0.3s ease;
+            }
+            
+            .mdc-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            }
+            
+            .mobile-menu {
+                background: white;
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .badge {
+                background: var(--mdc-theme-secondary);
+                color: white;
+                border-radius: 12px;
+                padding: 2px 8px;
+                font-size: 12px;
+            }
+            
+            .footer {
+                background: #f8f9fa;
+            }
+            
+            .footer-link {
+                color: #5f6368;
+                transition: color 0.3s ease;
+            }
+            
+            .footer-link:hover {
+                color: var(--mdc-theme-primary);
+            }
+            
+            .back-to-top {
+                background: var(--mdc-theme-primary);
+                border-radius: 50%;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                transition: transform 0.3s ease;
+            }
+            
+            .back-to-top:hover {
+                transform: translateY(-4px);
+            }
+            
+            .notification {
+                background: #4caf50;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-out;
+            }
+        </style>
+        {% block extra_css %}{% endblock %}
+    </head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+    <header class="bg-white header-shadow fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center space-x-3">
+                    <img src="{% static 'img/logo.jpg' %}" alt="Vic's Royal Beauty" class="h-16 w-16 rounded-lg">
+                    <span class="text-xl font-bold text-gray-800">Vic's Royal Beauty</span>
+                </a>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <div class="relative">
+                        <button class="nav-link flex items-center space-x-1" id="products-menu-button" aria-expanded="false">
+                            <span>Products</span>
+                            <span class="material-icons text-sm">expand_more</span>
+                        </button>
+                        <div id="products-dropdown" class="absolute left-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden animate-fade-in z-50">
+                            <div class="py-2">
+                                {% for category in categories %}
+                                    {% if category.active %}
+                                        <a href="{{ category.get_absolute_url }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors duration-200">
+                                            {{ category.name }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'about' %}" class="nav-link">About</a>
+                    <a href="{% url 'faq' %}" class="nav-link">FAQ</a>
+                    <a href="{% url 'customer_support' %}" class="nav-link">Customer Support</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:profile' %}" class="nav-link">Profile</a>
+                        <form action="{% url 'accounts:logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link bg-transparent border-0">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="mdc-button mdc-button--raised">
+                            <span class="mdc-button__ripple"></span>
+                            <span class="mdc-button__label">Login</span>
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Cart and Wishlist -->
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'products:wishlist' %}" class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                            <span class="material-icons">favorite_border</span>
+                            <span id="wishlist-count" class="badge absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+                        </a>
+                        <a href="{% url 'cart:cart_detail' %}" class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                            <span class="material-icons">shopping_cart</span>
+                            <span id="cart-count" class="badge absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+                        </a>
+                    </div>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <div class="flex items-center md:hidden space-x-4">
+                    <button id="mobile-menu-button" class="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                        <span class="material-icons">menu</span>
+                    </button>
+                    <a href="{% url 'products:wishlist' %}" class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                        <span class="material-icons">favorite_border</span>
+                        <span id="wishlist-count-mobile" class="badge absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+                    </a>
+                    <a href="{% url 'cart:cart_detail' %}" class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                        <span class="material-icons">shopping_cart</span>
+                        <span id="cart-count-mobile" class="badge absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="hidden md:hidden mobile-menu" id="mobile-menu">
+                <nav class="py-4 space-y-2">
+                    <div>
+                        <button class="w-full flex items-center justify-between px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200" id="mobile-products-menu-button">
+                            <span>Products</span>
+                            <span class="material-icons">expand_more</span>
+                        </button>
+                        <div class="hidden pl-8 space-y-2" id="mobile-products-submenu">
+                            {% for category in categories %}
+                                {% if category.active %}
+                                    <a href="{{ category.get_absolute_url }}" class="block py-2 text-gray-600 hover:text-primary transition-colors duration-200">
+                                        {{ category.name }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <a href="{% url 'about' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">About</a>
+                    <a href="{% url 'faq' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">FAQ</a>
+                    <a href="{% url 'customer_support' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Customer Support</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Profile</a>
+                        <form action="{% url 'accounts:logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200">Login</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8 mt-20">
+            {% block content %}
+            {% endblock %}
+    </main>
+
+    <footer class="footer mt-12 pt-12 pb-6">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div>
+                    <h3 class="text-lg font-semibold mb-6">Quick Links</h3>
+                    <ul class="space-y-3">
+                        <li><a href="{% url 'about' %}" class="footer-link">About</a></li>
+                        <li><a href="{% url 'faq' %}" class="footer-link">FAQ</a></li>
+                        <li><a href="{% url 'customer_support' %}" class="footer-link">Customer Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-6">Newsletter</h3>
+                    <form action="{% url 'newsletter:subscribe' %}" method="post" class="flex flex-col sm:flex-row gap-4">
+                        {% csrf_token %}
+                        <div class="flex-grow">
+                            <input type="email" name="email" placeholder="Enter your email" required 
+                                   class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <button type="submit" class="mdc-button mdc-button--raised">
+                            <span class="mdc-button__ripple"></span>
+                            <span class="mdc-button__label">Subscribe</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mb-12">
+                <h3 class="text-lg font-semibold mb-6">Find Us</h3>
+                <div class="w-full h-64 rounded-lg overflow-hidden shadow-lg">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63463.58718553766!2d6.673053720210441!3d6.201001190915834!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104392b2b061bd39%3A0x749611dbcabe9489!2sAsaba%2C%20Delta!5e0!3m2!1sen!2sng!4v1735995088155!5m2!1sen!2sng" 
+                            width="100%" height="100%" style="border:0;" 
+                            allowfullscreen="" loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+            
+            <div class="text-center text-gray-600">
+                <p>&copy; 2023 Vic's Royal Beauty. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <button id="back-to-top" class="back-to-top fixed bottom-4 right-4 p-3 hidden">
+        <span class="material-icons text-white">arrow_upward</span>
+    </button>
+
+    <div id="notification" class="notification fixed top-20 right-4 p-4 text-white transform translate-x-full transition-transform duration-300">
+        <span id="notification-message"></span>
+    </div>
+
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Material Components
+            mdc.autoInit();
+
+            // Initialize all buttons
+            document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+                new mdc.ripple.MDCRipple(buttonEl);
+            });
+
+            // Products dropdown functionality
+            const productsButton = document.getElementById('products-menu-button');
+            const productsDropdown = document.getElementById('products-dropdown');
+
+            productsButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isExpanded = productsButton.getAttribute('aria-expanded') === 'true';
+                productsButton.setAttribute('aria-expanded', !isExpanded);
+                productsDropdown.classList.toggle('hidden');
+                
+                // Rotate the arrow icon
+                const icon = productsButton.querySelector('.material-icons');
+                icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+                icon.style.transition = 'transform 0.3s ease';
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!productsButton.contains(e.target) && !productsDropdown.contains(e.target)) {
+                    productsButton.setAttribute('aria-expanded', 'false');
+                    productsDropdown.classList.add('hidden');
+                    const icon = productsButton.querySelector('.material-icons');
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileProductsMenuButton = document.getElementById('mobile-products-menu-button');
+            const mobileProductsSubmenu = document.getElementById('mobile-products-submenu');
+            const backToTopButton = document.getElementById('back-to-top');
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            const cartCount = document.getElementById('cart-count');
+            const wishlistCount = document.getElementById('wishlist-count');
+            const cartCountMobile = document.getElementById('cart-count-mobile');
+            const wishlistCountMobile = document.getElementById('wishlist-count-mobile');
+
+            // Mobile menu toggle
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Mobile products submenu toggle
+            mobileProductsMenuButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                mobileProductsSubmenu.classList.toggle('hidden');
+            });
+
+            // Close menus when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('#mobile-menu') && !event.target.closest('#mobile-menu-button')) {
+                    mobileMenu.classList.add('hidden');
+                }
+                if (!event.target.closest('#mobile-products-submenu') && !event.target.closest('#mobile-products-menu-button')) {
+                    mobileProductsSubmenu.classList.add('hidden');
+                }
+            });
+
+            // Back to top functionality
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.classList.remove('hidden');
+                } else {
+                    backToTopButton.classList.add('hidden');
+                }
+            });
+
+            backToTopButton.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Notification function
+            function showNotification(message) {
+                notificationMessage.textContent = message;
+                notification.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                }, 3000);
+            }
+
+            // Update cart/wishlist count functions
+            function updateCartCount(count) {
+                cartCount.textContent = count;
+                cartCountMobile.textContent = count;
+                cartCount.style.display = count === 0 ? 'none' : 'flex';
+                cartCountMobile.style.display = count === 0 ? 'none' : 'flex';
+            }
+
+            function updateWishlistCount(count) {
+                wishlistCount.textContent = count;
+                wishlistCountMobile.textContent = count;
+                wishlistCount.style.display = count === 0 ? 'none' : 'flex';
+                wishlistCountMobile.style.display = count === 0 ? 'none' : 'flex';
+            }
+
+            // Add to cart functionality
+            document.body.addEventListener('submit', function(e) {
+                if (e.target.classList.contains('add-to-cart-form')) {
+                    e.preventDefault();
+                    fetch(e.target.action, {
+                        method: 'POST',
+                        body: new FormData(e.target),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        updateCartCount(data.cart_total);
+                        showNotification('Item added to cart successfully!');
+                    });
+                }
+            });
+
+            // Add to wishlist functionality
+            document.body.addEventListener('submit', function(e) {
+                if (e.target.classList.contains('add-to-wishlist-form')) {
+                    e.preventDefault();
+                    fetch(e.target.action, {
+                        method: 'POST',
+                        body: new FormData(e.target),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        updateWishlistCount(data.wishlist_total);
+                        showNotification('Item added to wishlist successfully!');
+                    });
+                }
+            });
+
+            // Initial cart and wishlist count update
+            fetch('/cart/count/')
+                .then(response => response.json())
+                .then(data => updateCartCount(data.count));
+
+            fetch('{% url "products:wishlist_count" %}')
+                .then(response => response.json())
+                .then(data => updateWishlistCount(data.count));
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

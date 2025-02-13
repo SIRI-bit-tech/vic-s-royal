@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Log In{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    .mdc-card {
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    .mdc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .mdc-text-field {
+        width: 100%;
+        margin-bottom: 24px;
+        background-color: #f5f5f5;
+        border-radius: 8px 8px 0 0;
+    }
+    .mdc-text-field--filled {
+        --mdc-theme-primary: var(--mdc-theme-primary);
+        background-color: #f5f5f5;
+    }
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+        background-color: #f5f5f5;
+    }
+    .mdc-text-field--filled:hover {
+        background-color: #eeeeee;
+    }
+    .mdc-text-field--focused {
+        background-color: #f5f5f5;
+    }
+    .mdc-text-field__input {
+        padding: 20px 16px 6px !important;
+    }
+    .mdc-floating-label {
+        padding-left: 16px;
+        color: rgba(0, 0, 0, 0.6);
+    }
+    .mdc-text-field--filled .mdc-floating-label--float-above {
+        transform: translateY(-106%) scale(0.75);
+    }
+    .auth-container {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    .auth-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    .auth-header .material-icons {
+        font-size: 48px;
+        color: var(--mdc-theme-primary);
+        margin-bottom: 16px;
+    }
+    .form-error {
+        background-color: #fde8e8;
+        border: 1px solid #f8b4b4;
+        color: #c81e1e;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="auth-container">
+        <div class="mdc-card p-8">
+            <div class="auth-header">
+                <span class="material-icons">account_circle</span>
+                <h2 class="mdc-typography--headline4">Log In</h2>
+            </div>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}form-error{% else %}mdc-card__action-icons{% endif %} mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="form-error">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" action="{% url 'accounts:login' %}" novalidate>
+                {% csrf_token %}
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+                
+                <div class="mdc-text-field mdc-text-field--filled {% if form.username.errors %}mdc-text-field--invalid{% endif %}">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label" id="username-label">Username</span>
+                    <input type="text" name="username" id="username" 
+                           class="mdc-text-field__input"
+                           value="{{ form.username.value|default:'' }}"
+                           aria-labelledby="username-label"
+                           required>
+                    <span class="mdc-line-ripple"></span>
+                </div>
+                {% if form.username.errors %}
+                    <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                        {{ form.username.errors.0 }}
+                    </p>
+                {% endif %}
+
+                <div class="mdc-text-field mdc-text-field--filled {% if form.password.errors %}mdc-text-field--invalid{% endif %}">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label" id="password-label">Password</span>
+                    <input type="password" name="password" id="password" 
+                           class="mdc-text-field__input"
+                           aria-labelledby="password-label"
+                           required>
+                    <span class="mdc-line-ripple"></span>
+                </div>
+                {% if form.password.errors %}
+                    <p class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                        {{ form.password.errors.0 }}
+                    </p>
+                {% endif %}
+
+                <div class="flex items-center justify-between mt-6">
+                    <button type="submit" class="mdc-button mdc-button--raised">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="material-icons mr-2">login</span>
+                        <span class="mdc-button__label">Log In</span>
+                    </button>
+                    <a href="{% url 'accounts:password_reset' %}" 
+                       class="mdc-button mdc-button--outlined">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="material-icons mr-2">help_outline</span>
+                        <span class="mdc-button__label">Forgot Password?</span>
+                    </a>
+                </div>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="mdc-typography--body1">
+                    Don't have an account? 
+                    <a href="{% url 'accounts:register' %}" 
+                       class="mdc-button">
+                        <span class="mdc-button__ripple"></span>
+                        <span class="material-icons mr-2">person_add</span>
+                        <span class="mdc-button__label">Register here</span>
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Material Components
+        mdc.autoInit();
+
+        // Initialize all buttons
+        document.querySelectorAll('.mdc-button').forEach(function(buttonEl) {
+            new mdc.ripple.MDCRipple(buttonEl);
+        });
+
+        // Initialize text fields
+        document.querySelectorAll('.mdc-text-field').forEach(function(textField) {
+            new mdc.textField.MDCTextField(textField);
+        });
+    });
+</script>
+{% endblock %}
+

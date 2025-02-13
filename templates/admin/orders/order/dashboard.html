@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h2>Recent Orders</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Invoice Number</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in recent_orders %}
+        <tr>
+            <td>{{ order.invoice_number }}</td>
+            <td>{{ order.first_name }} {{ order.last_name }}</td>
+            <td>₦{{ order.get_total_cost }}</td>
+            <td>{{ order.created|date:"F j, Y, P" }}</td>
+            <td>{% if order.paid %}Paid{% else %}Pending{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

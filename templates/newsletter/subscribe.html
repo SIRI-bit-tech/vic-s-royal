@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Subscribe to Our Newsletter{% endblock %}
+
+{% block content %}
+<div class="bg-white bg-opacity-90 rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold mb-6">Subscribe to Our Newsletter</h1>
+    <form method="post" class="max-w-md">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mt-4">
+            Subscribe
+        </button>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2d3748;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        p {
+            margin-bottom: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #edf2f7;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        .product-image {
+            width: 80px;
+            height: auto;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4299e1;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .button:hover {
+            background-color: #2b6cb0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Order Confirmation</h1>
+        <p>Dear {{ order.first_name }} {{ order.last_name }},</p>
+        <p>Thank you for your order. Your order details are as follows:</p>
+        
+        <p><strong>Order Number:</strong> #{{ order.id }}</p>
+        <p><strong>Invoice Number:</strong> {{ order.invoice_number }}</p>
+        <p><strong>Date:</strong> {{ order.created|date:"F j, Y" }}</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>
+                        {% if item.product.image %}
+                            <img src="cid:{{ item.product.image.name }}" alt="Image of {{ item.product.name }}" class="product-image">
+                        {% else %}
+                            No image available
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₦{{ item.price }}</td>
+                    <td>₦{{ item.get_cost }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4"><strong>Total</strong></td>
+                    <td><strong>₦{{ order.get_total_cost }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <p><strong>Shipping Address:</strong></p>
+        <p>
+            {{ order.address }}<br>
+            {{ order.postal_code }} {{ order.city }}
+        </p>
+
+        <p>You will be redirected to WhatsApp to complete your order and make payment there.</p>
+        
+        <p>If you have any questions about your order, please contact our customer support at <a href="mailto:{{ support_email }}" class="text-blue-500 hover:underline">{{ support_email }}</a> or message us via WhatsApp at {{ admin_whatsapp }}.</p>
+        
+        <p>Thank you for shopping with us!</p>
+        
+        <p>Best regards,<br>Hair E-commerce Team</p>
+    </div>
+</body>
+</html>
