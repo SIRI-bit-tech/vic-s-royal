@@ -10,6 +10,8 @@ from cart.forms import CartAddProductForm
 from .forms import ReviewForm
 from django.utils import timezone
 from django.db.models import Count
+from django.core.cache import cache
+from django.db.models import Prefetch
 
 def home(request):
     # Hero Banners
@@ -70,10 +72,22 @@ def home(request):
 def product_list(request, category_slug=None):
     category = None
     categories = Category.objects.all()
-    products = Product.objects.filter(available=True)
+    products = Product.objects.filter(available=True).select_related('category').prefetch_related(
+        'reviews',
+        'variants',
+        Prefetch('wishlist_set', queryset=Wishlist.objects.filter(user=request.user if request.user.is_authenticated else None))
+    )
+    
     if category_slug:
         category = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=category)
+    
+    # Caching the queryset
+    products = cache.get_or_set(
+        f'products_list_{category_slug}_{request.user.id if request.user.is_authenticated else "anon"}',
+        products,
+        timeout=3600
+    )
     
     paginator = Paginator(products, 12)  # Show 12 products per page
     page = request.GET.get('page')
@@ -84,19 +98,38 @@ def product_list(request, category_slug=None):
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
     
-    return render(request, 'products/product_list.html',
-                  {'category': category,
-                   'categories': categories,
-                   'products': products})
+    return render(request, 'products/product_list.html', {
+        'category': category,
+        'categories': categories,
+        'products': products
+    })
 
 def product_detail(request, id, slug):
-    product = get_object_or_404(Product, id=id, slug=slug, available=True)
+    product = get_object_or_404(
+        Product.objects.select_related('category')
+        .prefetch_related(
+            'reviews__user',
+            'variants',
+            'related_products',
+            Prefetch('wishlist_set', queryset=Wishlist.objects.filter(user=request.user if request.user.is_authenticated else None))
+        ),
+        id=id,
+        slug=slug,
+        available=True
+    )
+    
+    # Cache the product detail
+    cache_key = f'product_detail_{id}_{slug}_{request.user.id if request.user.is_authenticated else "anon"}'
+    product = cache.get_or_set(cache_key, product, timeout=3600)
+    
     cart_product_form = CartAddProductForm()
     review_form = ReviewForm()
-    return render(request, 'products/product_detail.html',
-                  {'product': product,
-                   'cart_product_form': cart_product_form,
-                   'review_form': review_form})
+    
+    return render(request, 'products/product_detail.html', {
+        'product': product,
+        'cart_product_form': cart_product_form,
+        'review_form': review_form
+    })
 
 def add_review(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -195,4 +228,3 @@ def blog_detail(request, slug):
         'post': blog_post,
         'related_posts': related_posts
     })
-

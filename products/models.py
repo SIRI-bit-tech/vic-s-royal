@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.utils.text import slugify
 from decimal import Decimal
 from cloudinary.models import CloudinaryField
+import os
 
 class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
@@ -89,14 +90,27 @@ class Product(models.Model):
         return reverse('products:product_detail', args=[self.id, self.slug])
 
     def save(self, *args, **kwargs):
+        if self.image:
+            # Convert to WebP and optimize
+            options = {
+                'format': 'webp',
+                'quality': 'auto',
+                'fetch_format': 'auto',
+                'responsive': True,
+                'width': 'auto',
+                'crop': 'scale',
+                'sizes': '(max-width: 768px) 100vw, 50vw'
+            }
+            if not self.image.name.endswith('.webp'):
+                self.image.name = f"{os.path.splitext(self.image.name)[0]}.webp"
+            
+            # Calculate discount percentage if on sale
+            if self.on_sale and self.sale_price and self.price:
+                self.discount_percentage = round((1 - self.sale_price / self.price) * 100)
+        
         if not self.slug:
             self.slug = slugify(self.name)
         
-        # Calculate sale price if discount percentage is provided
-        if self.discount_percentage and self.price:
-            discount = (Decimal(self.discount_percentage) / Decimal(100)) * self.price
-            self.sale_price = self.price - discount
-
         super().save(*args, **kwargs)
 
     @property
@@ -249,4 +263,3 @@ class Video(models.Model):
 
     def __str__(self):
         return self.title
-
