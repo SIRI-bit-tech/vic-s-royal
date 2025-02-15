@@ -208,168 +208,94 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 <script>
-    // WebSocket setup
-    const cartSocket = new WebSocket(
-        'ws://' + window.location.host + '/ws/cart/'
-    );
-
-    cartSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        if (data.type === 'stock_update') {
-            updateStockDisplay(data.product_id, data.stock);
-        } else if (data.type === 'price_update') {
-            updatePriceDisplay(data.product_id, data.price, data.sale_price, data.on_sale);
-        } else if (data.type === 'cart_update') {
-            updateCartDisplay(data.cart_data);
-        }
-    };
-
-    cartSocket.onclose = function(e) {
-        console.error('Cart socket closed unexpectedly');
-    };
-
-    // WebSocket functions
-    function checkStock(productId) {
-        cartSocket.send(JSON.stringify({
-            'action': 'check_stock',
-            'product_id': productId
-        }));
-    }
-
-    function checkPrice(productId) {
-        cartSocket.send(JSON.stringify({
-            'action': 'check_price',
-            'product_id': productId
-        }));
-    }
-
-    function updateStockDisplay(productId, stock) {
-        const stockElement = document.querySelector(`[data-stock-id="${productId}"]`);
-        if (stockElement) {
-            stockElement.textContent = `Stock: ${stock}`;
-            if (stock <= 0) {
-                const addButton = document.querySelector(`[data-add-id="${productId}"]`);
-                if (addButton) {
-                    addButton.disabled = true;
-                    addButton.textContent = 'Out of Stock';
-                }
-            }
-        }
-    }
-
-    function updatePriceDisplay(productId, price, salePrice, onSale) {
-        const priceElement = document.querySelector(`[data-price-id="${productId}"]`);
-        if (priceElement) {
-            if (onSale && salePrice) {
-                priceElement.innerHTML = `
-                    <span class="original-price text-muted"><s>$${price}</s></span>
-                    <span class="sale-price text-danger">$${salePrice}</span>
-                `;
-            } else {
-                priceElement.textContent = `$${price}`;
-            }
-        }
-    }
-
-    // AJAX functions
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function updateCartDisplay(data) {
-        // Update total price
-        const cartTotalElement = document.getElementById('cart-total');
-        if (cartTotalElement && data.cart_total_price) {
-            cartTotalElement.textContent = `$${data.cart_total_price}`;
-        }
-
-        // Update item quantities and totals
-        if (data.item_id) {
-            const quantityElement = document.getElementById(`quantity-${data.item_id}`);
-            const itemTotalElement = document.getElementById(`total-${data.item_id}`);
-            
-            if (quantityElement) {
-                quantityElement.value = data.item_quantity;
-            }
-            if (itemTotalElement && data.item_total) {
-                itemTotalElement.textContent = `$${data.item_total}`;
-            }
-        }
-
-        // Update cart count
-        const cartCountElement = document.getElementById('cart-count');
-        if (cartCountElement && data.cart_total) {
-            cartCountElement.textContent = data.cart_total;
-        }
-
-        // Update discount if applicable
-        const discountElement = document.getElementById('cart-discount');
-        if (discountElement && data.cart_discount) {
-            discountElement.textContent = `$${data.cart_discount}`;
-        }
-
-        // Remove item if quantity is 0
-        if (data.item_id && data.item_quantity === 0) {
-            const cartItem = document.getElementById(`cart-item-${data.item_id}`);
-            if (cartItem) {
-                cartItem.remove();
-            }
-        }
-    }
-
-    // Handle cart form submissions
-    document.querySelectorAll('.cart-quantity-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const itemId = this.dataset.itemId;
-
-            fetch(this.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateCartDisplay(data);
-                // Trigger WebSocket checks after cart update
-                if (itemId) {
-                    checkStock(itemId);
-                    checkPrice(itemId);
-                }
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfToken = getCookie('csrftoken');
+        
+        // Handle cart form submissions
+        document.querySelectorAll('.cart-quantity-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const productId = this.dataset.itemId;
+                const isRemove = this.action.includes('cart_remove');
+                
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (isRemove) {
+                        const itemElement = document.getElementById(`cart-item-${productId}`);
+                        if (itemElement) {
+                            itemElement.remove();
+                            
+                            // If no items left, show empty cart message
+                            if (!document.querySelector('.cart-item')) {
+                                location.reload();
+                            }
+                        }
+                    } else {
+                        // Update quantity display
+                        const quantityDisplay = document.getElementById(`quantity-${productId}`);
+                        if (quantityDisplay) {
+                            quantityDisplay.textContent = data.item_quantity;
+                        }
+                        
+                        // Update item total price
+                        const itemTotal = document.getElementById(`item-total-${productId}`);
+                        if (itemTotal) {
+                            itemTotal.textContent = `Total: ₦${data.item_total}`;
+                        }
+                    }
+                    
+                    // Update cart total and discount
+                    const cartTotal = document.getElementById('cart-total');
+                    if (cartTotal) {
+                        cartTotal.textContent = `Total: ₦${data.cart_total_price}`;
+                    }
+                    
+                    const cartDiscount = document.getElementById('cart-discount');
+                    if (cartDiscount) {
+                        cartDiscount.textContent = `Discount: ₦${data.cart_discount}`;
+                    }
+                    
+                    // Update header cart count
+                    const headerCartCount = document.getElementById('cart-count');
+                    const headerCartCountMobile = document.getElementById('cart-count-mobile');
+                    if (headerCartCount) {
+                        headerCartCount.textContent = data.cart_total;
+                        headerCartCount.style.display = data.cart_total > 0 ? 'flex' : 'none';
+                    }
+                    if (headerCartCountMobile) {
+                        headerCartCountMobile.textContent = data.cart_total;
+                        headerCartCountMobile.style.display = data.cart_total > 0 ? 'flex' : 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to update cart. Please try again.');
+                });
             });
         });
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
     });
-
-    // Periodic stock and price checks
-    function periodicCheck() {
-        document.querySelectorAll('[data-product-id]').forEach(element => {
-            const productId = element.dataset.productId;
-            checkStock(productId);
-            checkPrice(productId);
-        });
-    }
-
-    // Run checks every 30 seconds
-    setInterval(periodicCheck, 30000);
-    
-    // Initial check
-    periodicCheck();
 </script>
 {% endblock %}
