@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: vic-royal-hair
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn hair_ecommerce.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DJANGO_SETTINGS_MODULE
+        value: hair_ecommerce.settings
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

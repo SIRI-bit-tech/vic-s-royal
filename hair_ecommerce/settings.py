@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'dashboard',
     'cloudinary',
     'cloudinary_storage',
+    'channels',  # Add this line
 ]
 
 MIDDLEWARE = [
@@ -99,6 +100,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hair_ecommerce.wsgi.application'
 
+ASGI_APPLICATION = 'hair_ecommerce.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -170,6 +172,29 @@ STATICFILES_DIRS = [
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Channel layer settings
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Use Redis as the session backend
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -213,10 +238,3 @@ CART_SESSION_ID = 'cart'
 # Login and Logout URLs
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-    }
-}

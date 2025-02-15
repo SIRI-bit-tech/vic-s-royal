@@ -11,9 +11,8 @@ from .forms import OrderCreateForm
 from cart.cart import Cart
 import urllib.parse
 from io import BytesIO
-from PIL import Image
-from email.mime.image import MIMEImage
 import os
+import requests
 
 @login_required
 def order_create(request):
@@ -67,29 +66,34 @@ def generate_whatsapp_url(request, order):
     return f"https://wa.me/{whatsapp_number}?text={encoded_message}"
 
 def send_order_confirmation_email(order):
-    subject = f'Order Confirmation - Order #{order.id}'
-    html_message = render_to_string('order_confirmation_email.html', {
+    subject = f'Order nr. {order.id}'
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to_email = order.email
+
+    # Get the order items with their images
+    order_items = []
+    for item in order.items.all():
+        image_url = item.product.image.url  # Use url instead of path for Cloudinary
+        order_items.append({
+            'product': item.product,
+            'price': item.price,
+            'quantity': item.quantity,
+            'image_url': image_url,
+        })
+
+    # Prepare context for the email template
+    context = {
         'order': order,
+        'order_items': order_items,
         'support_email': settings.SUPPORT_EMAIL,
         'admin_whatsapp': settings.ADMIN_WHATSAPP,
-    })
+    }
+
+    html_message = render_to_string('order_confirmation_email.html', context)
     plain_message = strip_tags(html_message)
-    from_email = settings.DEFAULT_FROM_EMAIL
-    to = order.email
 
-    msg = EmailMultiAlternatives(subject, plain_message, from_email, [to])
+    msg = EmailMultiAlternatives(subject, plain_message, from_email, [to_email])
     msg.attach_alternative(html_message, "text/html")
-
-    # Attach product images
-    for item in order.items.all():
-        if item.product.image:
-            image_path = item.product.image.path
-            with open(image_path, 'rb') as f:
-                image_data = f.read()
-                image_name = os.path.basename(image_path)
-                image = MIMEImage(image_data)
-                image.add_header('Content-ID', f'<{image_name}>')
-                msg.attach(image)
 
     try:
         msg.send()
@@ -113,11 +117,10 @@ def send_admin_order_email(order):
     for item in order.items.all():
         if item.product.image:
             try:
-                img_data = BytesIO()
-                image = Image.open(item.product.image.path)
-                image.save(img_data, format='PNG')
-                img_data.seek(0)
-                msg.attach(f'{item.product.name}.png', img_data.getvalue(), 'image/png')
+                response = requests.get(item.product.image.url)
+                if response.status_code == 200:
+                    img_data = BytesIO(response.content)
+                    msg.attach(f'{item.product.name}.png', img_data.getvalue(), 'image/png')
             except Exception as e:
                 print(f"Error attaching image for {item.product.name}: {str(e)}")
 
@@ -136,4 +139,3 @@ def admin_order_details(request, order_id):
 def order_detail(request, order_id):
     order = Order.objects.get(id=order_id, user=request.user)
     return render(request, 'orders/order_detail.html', {'order': order})
-

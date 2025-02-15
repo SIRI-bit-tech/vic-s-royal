@@ -50,9 +50,8 @@ class Product(models.Model):
     slug = models.SlugField(max_length=200)
     image = CloudinaryField('image', folder='products', 
                           transformation={
-                              'width': 800,
-                              'height': 600,
-                              'crop': 'fill',
+                              'width': 1200,
+                              'crop': 'scale',
                               'quality': 'auto',
                               'fetch_format': 'auto'
                           })
@@ -140,11 +139,11 @@ class HeroBanner(models.Model):
     subtitle = models.CharField(max_length=200, blank=True)
     image = CloudinaryField('image', folder='banners',
                           transformation={
-                              'width': 1920,
-                              'height': 800,
-                              'crop': 'fill',
+                              'width': 2000,
+                              'crop': 'scale',
                               'quality': 'auto',
-                              'fetch_format': 'auto'
+                              'fetch_format': 'auto',
+                              'effect': 'improve'
                           })
     button_text = models.CharField(max_length=50, default='Shop Now')
     button_link = models.CharField(max_length=200, default='/')

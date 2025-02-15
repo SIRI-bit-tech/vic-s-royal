@@ -45,11 +45,17 @@
         border-radius: 8px;
         overflow: hidden;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f9fafb;
     }
     .product-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        max-width: 100%;
+        max-height: 100%;
     }
     .product-details {
         flex-grow: 1;
@@ -114,13 +120,13 @@
 
       {% if cart %}
         <div class="mdc-card">
-                      {% for item in cart %}
-                <div class="cart-item" id="cart-item-{{ item.product.id }}">
+            {% for item in cart %}
+                <div class="cart-item" id="cart-item-{{ item.product.id }}" data-product-id="{{ item.product.id }}">
                     <div class="cart-item-content">
                         <div class="product-image">
                             <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
                                  alt="{{ item.product.name }}">
-                                          </div>
+                        </div>
                         <div class="product-details">
                             <h2 class="product-title">{{ item.product.name }}</h2>
                             <div class="price-quantity">
@@ -132,27 +138,27 @@
                                     {% else %}
                                         <span class="font-bold">₦{{ item.price }}</span>
                                     {% endif %}
-                                      </div>
+                                </div>
                                 <div class="flex items-center gap-2">
-                                    <form action="{% url 'cart:cart_decrease' item.product.id %}" method="post" class="cart-quantity-form" data-product-id="{{ item.product.id }}">
-                                          {% csrf_token %}
+                                    <form action="{% url 'cart:cart_decrease' item.product.id %}" method="post" class="cart-quantity-form" data-item-id="{{ item.product.id }}">
+                                        {% csrf_token %}
                                         <button type="submit" class="mdc-icon-button material-icons text-gray-600 hover:text-red-500">
                                             remove_circle_outline
                                         </button>
-                                      </form>
+                                    </form>
                                     <span class="quantity-display px-4 py-2 bg-gray-100 rounded" id="quantity-{{ item.product.id }}">{{ item.quantity }}</span>
-                                    <form action="{% url 'cart:cart_increase' item.product.id %}" method="post" class="cart-quantity-form" data-product-id="{{ item.product.id }}">
+                                    <form action="{% url 'cart:cart_increase' item.product.id %}" method="post" class="cart-quantity-form" data-item-id="{{ item.product.id }}">
                                         {% csrf_token %}
                                         <button type="submit" class="mdc-icon-button material-icons text-gray-600 hover:text-green-500">
                                             add_circle_outline
-                                          </button>
+                                        </button>
                                     </form>
-                                    <form action="{% url 'cart:cart_remove' item.product.id %}" method="post" class="cart-quantity-form" data-product-id="{{ item.product.id }}">
-                                          {% csrf_token %}
+                                    <form action="{% url 'cart:cart_remove' item.product.id %}" method="post" class="cart-quantity-form" data-item-id="{{ item.product.id }}">
+                                        {% csrf_token %}
                                         <button type="submit" class="mdc-icon-button material-icons text-red-500 hover:text-red-700">
                                             delete
                                         </button>
-                                      </form>
+                                    </form>
                                 </div>
                                 <div class="mt-2">
                                     <span class="font-bold" id="item-total-{{ item.product.id }}">Total: ₦{{ item.total_price }}</span>
@@ -161,8 +167,8 @@
                         </div>
                     </div>
                 </div>
-                      {% endfor %}
-
+            {% endfor %}
+            
             <div class="cart-summary">
                 <div class="cart-total">
                     <span id="cart-total">Total: ₦{{ cart.get_total_price }}</span>
@@ -172,7 +178,7 @@
                             <span id="cart-discount">Discount: ₦{{ cart.get_discount }}</span>
                         </div>
                     {% endif %}
-          </div>
+                </div>
                 <div class="cart-buttons">
                     <a href="{% url 'products:product_list' %}" class="mdc-button mdc-button--outlined">
                         <span class="mdc-button__ripple"></span>
@@ -186,7 +192,7 @@
                     </a>
                 </div>
             </div>
-          </div>
+        </div>
       {% else %}
         <div class="mdc-card empty-cart">
             <span class="material-icons">shopping_cart</span>
@@ -204,106 +210,166 @@
 {% block extra_js %}
 <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        mdc.autoInit();
-        document.querySelectorAll('.mdc-button, .mdc-icon-button').forEach(function(buttonEl) {
-            new mdc.ripple.MDCRipple(buttonEl);
-            if (buttonEl.classList.contains('mdc-icon-button')) {
-                buttonEl.unbounded = true;
-            }
-        });
+    // WebSocket setup
+    const cartSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/cart/'
+    );
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
+    cartSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'stock_update') {
+            updateStockDisplay(data.product_id, data.stock);
+        } else if (data.type === 'price_update') {
+            updatePriceDisplay(data.product_id, data.price, data.sale_price, data.on_sale);
+        } else if (data.type === 'cart_update') {
+            updateCartDisplay(data.cart_data);
         }
+    };
 
-        function updateCartDisplay(itemId, data) {
-            // Update quantity display
-            const quantityDisplay = document.getElementById(`quantity-${itemId}`);
-            if (quantityDisplay) {
-                quantityDisplay.textContent = data.item_quantity;
-            }
+    cartSocket.onclose = function(e) {
+        console.error('Cart socket closed unexpectedly');
+    };
 
-            // Update item total
-            const itemTotal = document.getElementById(`item-total-${itemId}`);
-            if (itemTotal) {
-                itemTotal.textContent = `Total: ₦${data.item_total}`;
-            }
+    // WebSocket functions
+    function checkStock(productId) {
+        cartSocket.send(JSON.stringify({
+            'action': 'check_stock',
+            'product_id': productId
+        }));
+    }
 
-            // Update cart total
-            const cartTotal = document.getElementById('cart-total');
-            if (cartTotal) {
-                cartTotal.textContent = `Total: ₦${data.cart_total_price}`;
-            }
+    function checkPrice(productId) {
+        cartSocket.send(JSON.stringify({
+            'action': 'check_price',
+            'product_id': productId
+        }));
+    }
 
-            // Update cart count badges
-            const cartCount = document.getElementById('cart-count');
-            const cartCountMobile = document.getElementById('cart-count-mobile');
-            if (cartCount) cartCount.textContent = data.cart_total;
-            if (cartCountMobile) cartCountMobile.textContent = data.cart_total;
-
-            // Update discount if present
-            const cartDiscount = document.getElementById('cart-discount');
-            if (cartDiscount && data.cart_discount !== '0') {
-                cartDiscount.textContent = `Discount: ₦${data.cart_discount}`;
-            }
-
-            // Remove item if quantity is 0
-            if (data.item_quantity === 0) {
-                const cartItem = document.getElementById(`cart-item-${itemId}`);
-                if (cartItem) {
-                    cartItem.style.opacity = '0';
-                    setTimeout(() => {
-                        cartItem.remove();
-                        // If no items left, reload to show empty cart
-                        if (data.cart_total === 0) {
-                            location.reload();
-                        }
-                    }, 300);
+    function updateStockDisplay(productId, stock) {
+        const stockElement = document.querySelector(`[data-stock-id="${productId}"]`);
+        if (stockElement) {
+            stockElement.textContent = `Stock: ${stock}`;
+            if (stock <= 0) {
+                const addButton = document.querySelector(`[data-add-id="${productId}"]`);
+                if (addButton) {
+                    addButton.disabled = true;
+                    addButton.textContent = 'Out of Stock';
                 }
             }
         }
+    }
 
-        // Handle all cart forms (increase, decrease, remove)
-        document.querySelectorAll('.cart-quantity-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const productId = this.dataset.productId;
-                const csrftoken = getCookie('csrftoken');
+    function updatePriceDisplay(productId, price, salePrice, onSale) {
+        const priceElement = document.querySelector(`[data-price-id="${productId}"]`);
+        if (priceElement) {
+            if (onSale && salePrice) {
+                priceElement.innerHTML = `
+                    <span class="original-price text-muted"><s>$${price}</s></span>
+                    <span class="sale-price text-danger">$${salePrice}</span>
+                `;
+            } else {
+                priceElement.textContent = `$${price}`;
+            }
+        }
+    }
 
-                fetch(this.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: new FormData(this)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    updateCartDisplay(productId, data);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+    // AJAX functions
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateCartDisplay(data) {
+        // Update total price
+        const cartTotalElement = document.getElementById('cart-total');
+        if (cartTotalElement && data.cart_total_price) {
+            cartTotalElement.textContent = `$${data.cart_total_price}`;
+        }
+
+        // Update item quantities and totals
+        if (data.item_id) {
+            const quantityElement = document.getElementById(`quantity-${data.item_id}`);
+            const itemTotalElement = document.getElementById(`total-${data.item_id}`);
+            
+            if (quantityElement) {
+                quantityElement.value = data.item_quantity;
+            }
+            if (itemTotalElement && data.item_total) {
+                itemTotalElement.textContent = `$${data.item_total}`;
+            }
+        }
+
+        // Update cart count
+        const cartCountElement = document.getElementById('cart-count');
+        if (cartCountElement && data.cart_total) {
+            cartCountElement.textContent = data.cart_total;
+        }
+
+        // Update discount if applicable
+        const discountElement = document.getElementById('cart-discount');
+        if (discountElement && data.cart_discount) {
+            discountElement.textContent = `$${data.cart_discount}`;
+        }
+
+        // Remove item if quantity is 0
+        if (data.item_id && data.item_quantity === 0) {
+            const cartItem = document.getElementById(`cart-item-${data.item_id}`);
+            if (cartItem) {
+                cartItem.remove();
+            }
+        }
+    }
+
+    // Handle cart form submissions
+    document.querySelectorAll('.cart-quantity-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const itemId = this.dataset.itemId;
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateCartDisplay(data);
+                // Trigger WebSocket checks after cart update
+                if (itemId) {
+                    checkStock(itemId);
+                    checkPrice(itemId);
+                }
             });
         });
     });
+
+    // Periodic stock and price checks
+    function periodicCheck() {
+        document.querySelectorAll('[data-product-id]').forEach(element => {
+            const productId = element.dataset.productId;
+            checkStock(productId);
+            checkPrice(productId);
+        });
+    }
+
+    // Run checks every 30 seconds
+    setInterval(periodicCheck, 30000);
+    
+    // Initial check
+    periodicCheck();
 </script>
 {% endblock %}

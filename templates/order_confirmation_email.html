@@ -79,8 +79,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>Product</th>
                     <th>Image</th>
+                    <th>Product</th>
                     <th>Quantity</th>
                     <th>Price</th>
                     <th>Total</th>
@@ -89,17 +89,13 @@
             <tbody>
                 {% for item in order.items.all %}
                 <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>
-                        {% if item.product.image %}
-                            <img src="cid:{{ item.product.image.name }}" alt="Image of {{ item.product.name }}" class="product-image">
-                        {% else %}
-                            No image available
-                        {% endif %}
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <img src="{{ image_url }}" alt="{{ item.product.name }}" style="max-width: 100px; height: auto;">
                     </td>
-                    <td>{{ item.quantity }}</td>
-                    <td>₦{{ item.price }}</td>
-                    <td>₦{{ item.get_cost }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ item.product.name }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ item.quantity }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">₦{{ item.price }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">₦{{ item.get_cost }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
